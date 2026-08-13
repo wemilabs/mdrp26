@@ -1,0 +1,18 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="256" height="256" rx="56" fill="#0F3A3C"/>
+
+  <!-- incoming light beam -->
+  <line x1="18" y1="132" x2="101" y2="132" stroke="#EAF3F2" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- internal beam through the prism -->
+  <line x1="101" y1="132" x2="155" y2="132" stroke="#EAF3F2" stroke-width="9" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- outgoing decomposed beams -->
+  <line x1="155" y1="132" x2="234" y2="90"  stroke="#028090" stroke-width="9" stroke-linecap="round"/>
+  <line x1="155" y1="132" x2="240" y2="132" stroke="#00A896" stroke-width="9" stroke-linecap="round"/>
+  <line x1="155" y1="132" x2="234" y2="174" stroke="#02C39A" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- prism triangle -->
+  <polygon points="128,58 80,182 176,182" fill="#FFFFFF"/>
+  <polygon points="128,58 80,182 176,182" fill="none" stroke="#DCEAE9" stroke-width="2"/>
+</svg>
