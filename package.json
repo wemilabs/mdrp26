@@ -1,0 +1,11 @@
+{
+  "name": "prism-prototype",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm -C gui dev",
+    "build": "pnpm -C gui build",
+    "lint": "pnpm -C gui lint",
+    "preview": "pnpm -C gui preview",
+    "install:gui": "pnpm -C gui install"
+  }
+}
