@@ -17,6 +17,19 @@
 
   --font-display: "Source Serif 4", Georgia, Cambria, serif;
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --animate-hero-fade: hero-fade 1.2s ease-out both;
+
+  @keyframes hero-fade {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
 
 body {

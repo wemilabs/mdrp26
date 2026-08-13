@@ -1,17 +1,12 @@
+import { Link, NavLink } from "react-router";
+
 const PRISM_LOGO_URL = "/prism-logo.svg";
 
-export type TabKey = "calculator" | "dashboard";
-
-interface TopBarProps {
-  tab: TabKey;
-  onTabChange: (tab: TabKey) => void;
-}
-
-export function TopBar({ tab, onTabChange }: TopBarProps) {
+export function TopBar() {
   return (
     <header className="bg-prism-dark">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-5">
-        <div className="flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-3">
           <img
             src={PRISM_LOGO_URL}
             alt="PRISM logo"
@@ -24,46 +19,30 @@ export function TopBar({ tab, onTabChange }: TopBarProps) {
               </span>
             </div>
           </div>
-        </div>
+        </Link>
 
         <nav className="flex gap-1 rounded-xl bg-white/8 p-1">
-          <TabButton
-            active={tab === "calculator"}
-            onClick={() => onTabChange("calculator")}
-          >
-            Refract
-          </TabButton>
-          <TabButton
-            active={tab === "dashboard"}
-            onClick={() => onTabChange("dashboard")}
-          >
-            Spectrum
-          </TabButton>
+          <TabLink to="/refract">Refract</TabLink>
+          <TabLink to="/spectrum">Spectrum</TabLink>
         </nav>
       </div>
     </header>
   );
 }
 
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
+function TabLink({ to, children }: { to: string; children: React.ReactNode }) {
   return (
-    <button
-      onClick={onClick}
-      className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-150 ${
-        active
-          ? "bg-prism-mint text-prism-dark shadow-sm"
-          : "text-white/70 hover:bg-white/10 hover:text-white"
-      }`}
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        `rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-150 ${
+          isActive
+            ? "bg-prism-mint text-prism-dark shadow-sm"
+            : "text-white/70 hover:bg-white/10 hover:text-white"
+        }`
+      }
     >
       {children}
-    </button>
+    </NavLink>
   );
 }
