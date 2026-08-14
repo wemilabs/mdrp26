@@ -9,7 +9,7 @@ The repository has two halves:
 | Folder | What it is |
 | --- | --- |
 | [`analysis-and-model-training/`](analysis-and-model-training/) | Python pipeline: cohort construction → feature extraction → descriptive statistics → model training/evaluation (LR / RF / XGBoost) → explainability (SHAP & cross-method overlap) → publication figures |
-| [`gui/`](gui/) | **PRISM** — a client-only React + TypeScript app that re-implements the trained XGBoost model in the browser for real-time, factor-level explained risk predictions, plus a model-performance dashboard |
+| [`gui/`](gui/) | **PRISM** — a client-only React + TypeScript app that re-implements the trained XGBoost model in the browser for real-time, factor-level explained risk predictions, with what-if analysis, waterfall explanations, input validation, assessment history, batch CSV scoring, and a model-performance dashboard |
 
 Both halves share the same study design: the GUI's `model.json` is exported from the
 Python training pipeline, and its predictions were verified to match the original
@@ -194,7 +194,8 @@ pnpm lint        # oxlint
 - **React 19** + **TypeScript 7** + **Vite 8** (`@vitejs/plugin-react`)
 - **Tailwind CSS 4** via `@tailwindcss/vite` — CSS-first config, custom `@theme`
   token set in `src/index.css` (no `tailwind.config.js`)
-- **Recharts 3** (dashboard charts), **lucide-react** (icons)
+- **Recharts 3** (dashboard & waterfall charts), **lucide-react** (icons),
+  **papaparse** (batch CSV import/export)
 - Tooling: **oxlint**, Playwright + jsdom (testing), pnpm
 
 Design tokens (defined in `src/index.css`): dark teal `#0f3a3c`, teal `#028090`,
@@ -205,31 +206,47 @@ seafoam `#00a896`, mint `#02c39a`, amber `#d98c2b`, red `#c4432b`, light bg
 
 ```text
 src/
-  App.tsx                 Tab state (Refract | Spectrum), form state, handlers
+  App.tsx                 Routes (landing | Refract | Spectrum | Batch), form state,
+                          URL-parameter hydration for shareable cases
   main.tsx, index.css     Entry point + Tailwind v4 @theme design tokens
   components/
     top-bar.tsx           PRISM header + tab navigation
     section-intro.tsx     Reusable section heading
     report-modal.tsx      Iframe report preview + print/PDF
     refract/              Patient risk calculator view
-      refract-view.tsx      Form + example presets + sticky result panel
-      form-group.tsx        Grouped inputs (number / select) with units
-      result-panel.tsx      Probability, tier badge, top-6 factor bars, advice
+      refract-view.tsx      Form + presets + copy-link + implausible-value warning
+      form-group.tsx        Grouped inputs with validation flags & cohort percentiles
+      result-panel.tsx      Probability, tier badge, sensitivity band, factor
+                            bars/waterfall toggle, advice, save assessment
+      factor-bars.tsx       Reusable top-factor bar list
+      waterfall-chart.tsx   SHAP-style waterfall (Recharts)
+      what-if-panel.tsx     Counterfactual sliders with live risk delta
+      history-panel.tsx     Saved assessments (localStorage) + compare selection
+      comparison-view.tsx   Side-by-side comparison of two saved assessments
     spectrum/             Model performance dashboard view
       spectrum-view.tsx     Stat row, 4 chart cards, 2 list cards
       stat-row.tsx          98 stays · 10.2% mortality · 0.818 AUROC · 59 features
       chart-card.tsx        Card wrapper for Recharts charts
       list-card.tsx         Label/value tables
+    batch/
+      batch-view.tsx        CSV template download, upload, scored table, export
   engine/
     predict-engine.ts     Client-side XGBoost evaluation + feature attribution
     advice-engine.ts      Risk tiering + clinical recommendations
     report-builder.ts     Print-optimized HTML report generation
+    waterfall.ts          Waterfall steps relative to a median "typical patient"
+    validation.ts         Reference-range checks + cohort z-scores/percentiles
+    sensitivity.ts        ±5% input-perturbation band around the prediction
+    history-store.ts      localStorage CRUD for saved assessments (cap 50)
+    share.ts              Form ⇄ URL query-param serialization + clipboard helper
   data/
     model.json            Exported model (trees + preprocessing params)
-    fields.ts             22 input field definitions in 3 groups
+    fields.ts             22 input field definitions in 3 groups, with slider
+                          ranges, normal/plausible clinical ranges
     examples.ts           lowRisk / highRisk example presets
     spectrum-data.ts      Hard-coded evaluation results for the dashboard
-  types/index.ts          TreeNode, ModelExport, PredictionResult, RiskTier, ...
+  types/index.ts          TreeNode, ModelExport, PredictionResult, RiskTier,
+                          SavedAssessment, ...
 ```
 
 ### How the prediction engine works
@@ -254,10 +271,40 @@ src/
 clinical recommendations (top-5 risk-increasing factors shown).
 
 `report-builder.ts` generates two print-optimized HTML documents: a **patient
-report** (risk %, tier, top-8 factor table, recommendations, input values,
-disclaimer) and a **performance report** (cohort stats, holdout & CV AUROC tables,
-top-5 SHAP, cross-method agreement, significant associations). All user values are
+report** (risk %, tier, sensitivity band, top-8 factor table, "how the estimate
+was built" waterfall table, recommendations, input values, disclaimer) and a
+**performance report** (cohort stats, holdout & CV AUROC tables, top-5 SHAP,
+cross-method agreement, significant associations). All user values are
 HTML-escaped before interpolation.
+
+### Interactive analysis features
+
+- **What-if explorer** — after a prediction, sliders on modifiable inputs
+  (vitals, labs, LOS, comorbidities) re-run the model live and show the risk
+  delta against the untouched baseline.
+- **Waterfall explanation** — a per-factor waterfall from a **"typical patient"
+  baseline** (all inputs at training-set medians/modes, ≈ 36.5% risk) to the
+  patient's predicted risk. Factor steps are the *difference* between the
+  patient's and the median patient's path-decomposition contributions, so the
+  final step reproduces the predicted probability exactly (verified to < 1e-9);
+  steps are displayed in probability space and ordered by |contribution|.
+- **Input validation & cohort context** — every numeric field is checked
+  against standard adult reference ranges (amber = abnormal, red =
+  physiologically implausible) and annotated with an approximate training-cohort
+  percentile (normal approximation from the exported means/scales); values with
+  |z| > 3 get an "outside training range" badge. Implausible values trigger a
+  warning but never block calculation.
+- **Sensitivity band** — the min–max predicted risk when each numeric input is
+  perturbed ±5%, shown as a band around the headline probability and explicitly
+  labeled *not a confidence interval*.
+- **Assessment history & comparison** — assessments can be saved with a label
+  to `localStorage` (per-browser, capped at 50), reloaded into the form, and
+  compared two-at-a-time side by side with per-factor log-odds deltas.
+- **Shareable case links** — the current form serializes into URL query
+  parameters (`/refract?age=78&…`); opening such a link restores the case.
+- **Batch CSV scoring** (`/batch`) — download a header template, upload a
+  cohort CSV, and get a scored table (risk %, tier, top-3 factors,
+  implausible-value flags) with CSV export — all client-side via papaparse.
 
 ### Input fields (22)
 
@@ -267,6 +314,10 @@ HTML-escaped before interpolation.
   systolic & diastolic BP, temperature
 - **Laboratory values:** creatinine, BUN, glucose, sodium, potassium, WBC,
   hemoglobin, bicarbonate, platelets, lactate
+
+Each numeric field definition carries slider bounds (`min`/`max`/`step`), a
+`modifiable` flag for the what-if explorer, and clinical `normalRange` /
+`plausibleRange` bounds used by the validation engine.
 
 Two built-in presets (`lowRisk`: 45 y elective admission, normal vitals/labs;
 `highRisk`: 78 y urgent admission, markedly abnormal vitals/labs) demonstrate the
