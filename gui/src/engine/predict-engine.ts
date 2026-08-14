@@ -1,5 +1,5 @@
-import type { ModelExport, PatientFormValues, PredictionResult, RankedFactor, TreeNode } from "../types";
 import modelData from "../data/model.json";
+import type { ModelExport, PatientFormValues, PredictionResult, RankedFactor, TreeNode } from "../types";
 
 const MODEL = modelData as unknown as ModelExport;
 
@@ -25,9 +25,15 @@ const FEATURE_LABELS: Record<string, string> = {
   n_comorbidities: "Comorbidity count",
 };
 
+const LABEL_TO_FIELD: Record<string, string> = Object.fromEntries(
+  Object.entries(FEATURE_LABELS).map(([key, label]) => [label, key])
+);
+
 function sigmoid(x: number): number {
   return 1 / (1 + Math.exp(-x));
 }
+
+const BASE_LOGIT = Math.log(MODEL.base_score / (1 - MODEL.base_score));
 
 function standardize(raw: number, mean: number, scale: number): number {
   return (raw - mean) / scale;
@@ -87,8 +93,7 @@ export function predict(form: PatientFormValues): PredictionResult {
     margin += traverseTree(tree, x, contribs);
   });
 
-  const baseLogit = Math.log(MODEL.base_score / (1 - MODEL.base_score));
-  const probability = sigmoid(margin + baseLogit);
+  const probability = sigmoid(margin + BASE_LOGIT);
 
   const byName: Record<string, number> = {};
 
@@ -111,4 +116,5 @@ export function predict(form: PatientFormValues): PredictionResult {
   return { probability, ranked };
 }
 
-export { MODEL, FEATURE_LABELS };
+export { BASE_LOGIT, FEATURE_LABELS, LABEL_TO_FIELD, MODEL, sigmoid };
+

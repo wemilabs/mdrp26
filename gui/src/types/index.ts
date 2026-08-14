@@ -41,6 +41,16 @@ export interface Recommendation {
   items: { factor: string; advice: string }[];
 };
 
+export interface SavedAssessment {
+  id: string;
+  savedAt: number;
+  label: string;
+  form: PatientFormValues;
+  probability: number;
+  ranked: RankedFactor[];
+  tierLabel: RiskTier["label"];
+};
+
 export type FieldType = "number" | "select";
 
 export interface FieldDefinition {
@@ -50,6 +60,12 @@ export interface FieldDefinition {
   type: FieldType;
   options?: string[];
   note?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  modifiable?: boolean;
+  normalRange?: [number, number];
+  plausibleRange?: [number, number];
 };
 
 export interface FieldGroup {

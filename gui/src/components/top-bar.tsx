@@ -24,6 +24,7 @@ export function TopBar() {
         <nav className="flex gap-1 rounded-xl bg-white/8 p-1">
           <TabLink to="/refract">Refract</TabLink>
           <TabLink to="/spectrum">Spectrum</TabLink>
+          <TabLink to="/batch">Batch</TabLink>
         </nav>
       </div>
     </header>
