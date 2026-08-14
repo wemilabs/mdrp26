@@ -1,10 +1,18 @@
 import { ArrowRight } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
-import { Link, Navigate, Outlet, Route, Routes } from "react-router";
+import {
+  Link,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useSearchParams,
+} from "react-router";
 import { ReportModal } from "./components/report-modal";
 import { TopBar } from "./components/top-bar";
 import { EXAMPLE_PATIENTS } from "./data/examples";
 import { predict } from "./engine/predict-engine";
+import { paramsToForm } from "./engine/share";
 import type { PatientFormValues, PredictionResult } from "./types";
 
 const CalculatorView = lazy(() =>
@@ -17,10 +25,16 @@ const DashboardView = lazy(() =>
     default: m.DashboardView,
   })),
 );
+const BatchView = lazy(() =>
+  import("./components/batch/batch-view").then((m) => ({
+    default: m.BatchView,
+  })),
+);
 
 export default function App() {
+  const [searchParams] = useSearchParams();
   const [form, setForm] = useState<PatientFormValues>(
-    EXAMPLE_PATIENTS.lowRisk.values,
+    () => paramsToForm(searchParams) ?? EXAMPLE_PATIENTS.lowRisk.values,
   );
   const [result, setResult] = useState<PredictionResult | null>(null);
   const [reportHtml, setReportHtml] = useState<string | null>(null);
@@ -39,6 +53,11 @@ export default function App() {
     setResult(predict(form));
   };
 
+  const handleLoadForm = (values: PatientFormValues) => {
+    setForm(values);
+    setResult(null);
+  };
+
   return (
     <>
       <Routes>
@@ -54,6 +73,7 @@ export default function App() {
                 onCalculate={handleCalculate}
                 onExample={handleExample}
                 onShowReport={setReportHtml}
+                onLoadForm={handleLoadForm}
               />
             }
           />
@@ -61,6 +81,7 @@ export default function App() {
             path="spectrum"
             element={<DashboardView onShowReport={setReportHtml} />}
           />
+          <Route path="batch" element={<BatchView />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

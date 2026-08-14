@@ -2,6 +2,8 @@ import { FIELD_LABEL_LOOKUP } from "../data/fields";
 import { bivariate, cvAuroc, holdoutAuroc, overlapData, shapTop } from "../data/spectrum-data";
 import type { PatientFormValues, PredictionResult, Recommendation } from "../types";
 import { riskTier } from "./advice-engine";
+import type { SensitivityBand } from "./sensitivity";
+import { buildWaterfallSteps } from "./waterfall";
 
 function escapeHtml(str: unknown): string {
   return String(str).replace(
@@ -56,7 +58,8 @@ function reportShell(kicker: string, docTitle: string, heading: string, meta: st
 export function buildPatientReportHTML(
   form: PatientFormValues,
   result: PredictionResult,
-  recs: Recommendation
+  recs: Recommendation,
+  band?: SensitivityBand
 ): string {
   const tier = riskTier(result.probability);
   const now = new Date();
@@ -81,13 +84,28 @@ export function buildPatientReportHTML(
 
   const recItems = recs.items.map((it) => `<li><strong>${escapeHtml(it.factor)}:</strong> ${escapeHtml(it.advice)}</li>`).join("");
 
+  const waterfallRows = buildWaterfallSteps(result)
+    .map((s) => {
+      const deltaPts = (s.to - s.from) * 100;
+      const delta =
+        s.kind === "anchor"
+          ? "&mdash;"
+          : `<span style="color:${s.kind === "up" ? "#C4432B" : "#00A896"};font-weight:600;">${deltaPts >= 0 ? "+" : ""}${deltaPts.toFixed(1)} pts</span>`;
+      return `<tr><td>${escapeHtml(s.name)}</td><td>${delta}</td><td>${(s.to * 100).toFixed(1)}%</td></tr>`;
+    })
+    .join("");
+
   const body = `
     <div class="box">
       <div class="kicker" style="color:#5B7472;">PREDICTED MORTALITY RISK</div>
       <span class="risk-num" style="color:${tier.colorVar}">${(result.probability * 100).toFixed(1)}%</span>
       <span class="tier" style="background:color-mix(in srgb, ${tier.colorVar} 15%, white); color:${tier.colorVar};">${tier.label} risk</span>
+      ${band ? `<p style="font-family: system-ui, sans-serif; font-size:12px; color:#5B7472; margin:8px 0 0;">Sensitivity: ${(band.low * 100).toFixed(1)}%&ndash;${(band.high * 100).toFixed(1)}% under &plusmn;5% input variation &mdash; not a confidence interval.</p>` : ""}
       <h2 style="margin-top:22px;">Top Contributing Factors</h2>
       <table><thead><tr><th>Factor</th><th>Direction</th></tr></thead><tbody>${factorRows}</tbody></table>
+      <h2 style="margin-top:22px;">How the Estimate Was Built</h2>
+      <table><thead><tr><th>Step</th><th>&Delta; risk</th><th>Cumulative risk</th></tr></thead><tbody>${waterfallRows}</tbody></table>
+      <p style="font-family: system-ui, sans-serif; font-size:11px; color:#5B7472;">Starting from a typical cohort patient (median inputs), each factor shows how this patient differs. Steps are shown in probability space for readability; the model combines factors on the log-odds scale, so step sizes depend on their order (largest contributions first).</p>
       <h2 style="margin-top:22px;">Suggested Next Steps</h2>
       <p style="font-family: system-ui, sans-serif; font-size:13px; background:#EAF3F2; padding:12px 14px; border-radius:8px;">${escapeHtml(recs.summary)}</p>
       ${recItems ? `<ul style="font-family: system-ui, sans-serif; font-size:12.5px; color:#5B7472; line-height:1.6;">${recItems}</ul>` : ""}
