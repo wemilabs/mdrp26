@@ -1,11 +1,12 @@
 import {
   Bar,
   BarChart,
-  Cell,
+  Rectangle,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
+  type BarShapeProps,
 } from "recharts";
 import {
   buildWaterfallSteps,
@@ -22,6 +23,11 @@ const COLORS: Record<WaterfallStep["kind"], string> = {
 interface WaterfallRow extends WaterfallStep {
   offset: number;
   span: number;
+}
+
+function waterfallBar({ payload, ...rectProps }: BarShapeProps) {
+  const kind = (payload as WaterfallRow | undefined)?.kind ?? "anchor";
+  return <Rectangle {...rectProps} fill={COLORS[kind]} />;
 }
 
 function toRows(steps: WaterfallStep[]): WaterfallRow[] {
@@ -97,11 +103,13 @@ export function WaterfallChart({ result }: { result: PredictionResult }) {
             fill="transparent"
             isAnimationActive={false}
           />
-          <Bar dataKey="span" stackId="w" radius={2} isAnimationActive={false}>
-            {rows.map((row) => (
-              <Cell key={row.name} fill={COLORS[row.kind]} />
-            ))}
-          </Bar>
+          <Bar
+            dataKey="span"
+            stackId="w"
+            radius={2}
+            isAnimationActive={false}
+            shape={waterfallBar}
+          />
         </BarChart>
       </ResponsiveContainer>
       <p className="mt-1 text-[10.5px] leading-snug text-prism-muted-2">

@@ -56,9 +56,12 @@ export function BatchView() {
       header: true,
       skipEmptyLines: true,
       complete: (res) => {
-        const known = res.meta.fields?.filter((f) => FIELD_KEYS.includes(f)) ?? [];
+        const known =
+          res.meta.fields?.filter((f) => FIELD_KEYS.includes(f)) ?? [];
         if (known.length === 0) {
-          setParseError("No recognized columns found. Download the template to see the expected header row.");
+          setParseError(
+            "No recognized columns found. Download the template to see the expected header row.",
+          );
           setRows(null);
         } else {
           setParseError(null);
@@ -97,7 +100,7 @@ export function BatchView() {
     <div>
       <SectionIntro
         title="Batch Risk Scoring"
-        body="Score multiple patients at once from a CSV file. Each row is run through the same model as the calculator, entirely in your browser — no data leaves this device."
+        body="Score multiple patients at once from a CSV file. Each row is run through the same model as the calculator, entirely in your browser. No data leaves this device."
       />
 
       <div className="mb-6 mt-5 flex flex-wrap items-center gap-2.5">
@@ -105,11 +108,11 @@ export function BatchView() {
           onClick={handleTemplate}
           className="flex items-center gap-1.5 rounded-lg border border-prism-teal/40 bg-prism-card px-3.5 py-2 text-xs font-semibold text-prism-teal transition-colors hover:bg-prism-teal hover:text-white"
         >
-          <Download className="h-3.5 w-3.5" />
+          <Download className="size-3.5" />
           Download template CSV
         </button>
         <label className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-prism-dark px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-prism-dark-light">
-          <FileUp className="h-3.5 w-3.5" />
+          <FileUp className="size-3.5" />
           Upload CSV
           <input
             type="file"
@@ -122,12 +125,14 @@ export function BatchView() {
             }}
           />
         </label>
-        {fileName && <span className="text-xs text-prism-muted">{fileName}</span>}
+        {fileName && (
+          <span className="text-xs text-prism-muted">{fileName}</span>
+        )}
       </div>
 
       {parseError && (
         <div className="mb-4 flex items-start gap-2 rounded-xl border border-prism-red/40 bg-prism-red/10 px-4 py-3 text-xs text-prism-text">
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-prism-red" />
+          <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-prism-red" />
           {parseError}
         </div>
       )}
@@ -142,7 +147,7 @@ export function BatchView() {
               onClick={handleExport}
               className="flex items-center gap-1.5 rounded-lg border border-prism-teal/40 px-3 py-1.5 text-xs font-semibold text-prism-teal transition-colors hover:bg-prism-teal hover:text-white"
             >
-              <Download className="h-3 w-3" />
+              <Download className="size-3" />
               Export results CSV
             </button>
           </div>
@@ -162,12 +167,18 @@ export function BatchView() {
               </thead>
               <tbody>
                 {rows.map((row) => (
-                  <tr key={row.index} className="border-b border-prism-border/60">
+                  <tr
+                    key={row.index}
+                    className="border-b border-prism-border/60"
+                  >
                     <td className="px-2 py-2 text-prism-muted">{row.index}</td>
                     <td className="px-2 py-2">{row.form.age}</td>
                     <td className="px-2 py-2">{row.form.gender}</td>
                     <td className="px-2 py-2">{row.form.admission_type}</td>
-                    <td className="px-2 py-2 font-semibold" style={{ color: row.tier.colorVar }}>
+                    <td
+                      className="px-2 py-2 font-semibold"
+                      style={{ color: row.tier.colorVar }}
+                    >
                       {(row.probability * 100).toFixed(1)}%
                     </td>
                     <td className="px-2 py-2">
@@ -181,11 +192,15 @@ export function BatchView() {
                         {row.tier.label}
                       </span>
                     </td>
-                    <td className="px-2 py-2 text-prism-muted">{row.topFactors.join(", ")}</td>
+                    <td className="px-2 py-2 text-prism-muted">
+                      {row.topFactors.join(", ")}
+                    </td>
                     <td className="px-2 py-2">
                       {row.issues.length > 0 && (
-                        <span title={`Implausible values: ${row.issues.join(", ")}`}>
-                          <AlertTriangle className="h-3.5 w-3.5 text-prism-amber" />
+                        <span
+                          title={`Implausible values: ${row.issues.join(", ")}`}
+                        >
+                          <AlertTriangle className="size-3.5 text-prism-amber" />
                         </span>
                       )}
                     </td>
@@ -195,15 +210,18 @@ export function BatchView() {
             </table>
           </div>
           <p className="mt-3 text-[10.5px] leading-snug text-prism-muted-2">
-            Missing or invalid values fall back to training-set medians, exactly as in the calculator. Rows flagged
-            with a warning contain physiologically implausible values — review them before interpreting results.
+            Missing or invalid values fall back to training-set medians, exactly
+            as in the calculator. Rows flagged with a warning contain
+            physiologically implausible values. Review them before interpreting
+            results.
           </p>
         </div>
       )}
 
       <p className="mt-7 max-w-3xl text-xs leading-relaxed text-prism-muted-2">
-        Educational output only — not clinical advice. PRISM is a research and demonstration tool and is not
-        validated for clinical use or real patient decision-making.
+        Educational output only, not clinical advice. PRISM is a research and
+        demonstration tool and is not validated for clinical use or real patient
+        decision-making.
       </p>
     </div>
   );

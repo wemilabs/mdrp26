@@ -145,7 +145,7 @@ export function ResultPanel({
         </ul>
       )}
       <div className="mt-2 flex items-start gap-1.5 text-[10.5px] font-semibold leading-snug text-prism-red">
-        <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+        <AlertTriangle className="mt-0.5 size-3 shrink-0" />
         Educational output only — not clinical advice. Care decisions must be
         made by qualified clinicians.
       </div>
@@ -156,7 +156,7 @@ export function ResultPanel({
         }
         className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-prism-teal py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-prism-dark"
       >
-        <FileText className="h-4 w-4" />
+        <FileText className="size-4" />
         View / Print Patient Report
       </button>
 
@@ -165,7 +165,7 @@ export function ResultPanel({
           onClick={() => setLabelDraft("")}
           className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl border border-prism-teal/40 py-2.5 text-sm font-semibold text-prism-teal transition-colors hover:bg-prism-card"
         >
-          <Save className="h-4 w-4" />
+          <Save className="size-4" />
           Save assessment
         </button>
       ) : (
