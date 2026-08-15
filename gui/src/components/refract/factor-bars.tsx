@@ -16,7 +16,11 @@ export function FactorBars({ factors }: { factors: RankedFactor[] }) {
               <span
                 className={`flex items-center gap-0.5 font-semibold ${isRisk ? "text-prism-red" : "text-prism-seafoam"}`}
               >
-                {isRisk ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                {isRisk ? (
+                  <ArrowUp className="size-3" />
+                ) : (
+                  <ArrowDown className="size-3" />
+                )}
                 {isRisk ? "Increases risk" : "Decreases risk"}
               </span>
             </div>

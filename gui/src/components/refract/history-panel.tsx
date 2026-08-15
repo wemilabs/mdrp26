@@ -28,20 +28,29 @@ export function HistoryPanel({ history, onLoad, onDelete }: HistoryPanelProps) {
   const selected = history.filter((e) => selectedIds.includes(e.id));
 
   const toggleSelect = (id: string) => {
-    setSelectedIds((ids) => (ids.includes(id) ? ids.filter((i) => i !== id) : [...ids, id].slice(-2)));
+    setSelectedIds((ids) =>
+      ids.includes(id) ? ids.filter((i) => i !== id) : [...ids, id].slice(-2),
+    );
   };
 
   return (
     <div className="mt-6 rounded-2xl border border-prism-border bg-white p-5 shadow-sm">
-      <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between text-left">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between text-left"
+      >
         <span className="flex items-center gap-2 text-xs font-bold text-prism-text">
-          <History className="h-3.5 w-3.5 text-prism-teal" />
+          <History className="size-3.5 text-prism-teal" />
           Saved assessments
           <span className="rounded-full bg-prism-card px-2 py-0.5 text-[10.5px] font-semibold text-prism-muted">
             {history.length}
           </span>
         </span>
-        {open ? <ChevronUp className="h-4 w-4 text-prism-muted" /> : <ChevronDown className="h-4 w-4 text-prism-muted" />}
+        {open ? (
+          <ChevronUp className="size-4 text-prism-muted" />
+        ) : (
+          <ChevronDown className="size-4 text-prism-muted" />
+        )}
       </button>
 
       {open && (
@@ -49,12 +58,14 @@ export function HistoryPanel({ history, onLoad, onDelete }: HistoryPanelProps) {
           {history.length === 0 ? (
             <p className="mt-3 text-xs text-prism-muted">
               No saved assessments yet. Calculate a risk estimate, then use{" "}
-              <strong className="text-prism-text">Save assessment</strong> to keep it here for later comparison.
+              <strong className="text-prism-text">Save assessment</strong> to
+              keep it here for later comparison.
             </p>
           ) : (
             <>
               <p className="mt-2 text-[10.5px] leading-snug text-prism-muted-2">
-                Stored only in this browser. Select two entries to compare them side by side.
+                Stored only in this browser. Select two entries to compare them
+                side by side.
               </p>
               <div className="mt-3 space-y-1.5">
                 {history.map((entry) => {
@@ -72,8 +83,12 @@ export function HistoryPanel({ history, onLoad, onDelete }: HistoryPanelProps) {
                         aria-label={`Select ${entry.label} for comparison`}
                       />
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-xs font-semibold text-prism-text">{entry.label}</div>
-                        <div className="text-[10.5px] text-prism-muted-2">{relativeTime(entry.savedAt)}</div>
+                        <div className="truncate text-xs font-semibold text-prism-text">
+                          {entry.label}
+                        </div>
+                        <div className="text-[10.5px] text-prism-muted-2">
+                          {relativeTime(entry.savedAt)}
+                        </div>
                       </div>
                       <span
                         className="rounded-full px-2 py-0.5 text-[10.5px] font-bold"
@@ -89,20 +104,22 @@ export function HistoryPanel({ history, onLoad, onDelete }: HistoryPanelProps) {
                         title="Load into form"
                         className="rounded-md p-1.5 text-prism-teal transition-colors hover:bg-prism-card"
                       >
-                        <Upload className="h-3.5 w-3.5" />
+                        <Upload className="size-3.5" />
                       </button>
                       <button
                         onClick={() => onDelete(entry.id)}
                         title="Delete"
                         className="rounded-md p-1.5 text-prism-muted transition-colors hover:bg-prism-card hover:text-prism-red"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="size-3.5" />
                       </button>
                     </div>
                   );
                 })}
               </div>
-              {selected.length === 2 && <ComparisonView entries={[selected[0], selected[1]]} />}
+              {selected.length === 2 && (
+                <ComparisonView entries={[selected[0], selected[1]]} />
+              )}
             </>
           )}
         </>

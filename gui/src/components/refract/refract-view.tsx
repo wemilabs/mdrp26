@@ -51,7 +51,6 @@ export function CalculatorView({
       return;
     }
     setCopied(true);
-    // setTimeout: reverts the transient "Copied" confirmation after 2s
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -84,7 +83,7 @@ export function CalculatorView({
             onClick={() => onExample(key)}
             className="flex items-center gap-1.5 rounded-lg border border-prism-teal/40 bg-prism-card px-3.5 py-2 text-xs font-semibold text-prism-teal transition-colors hover:bg-prism-teal hover:text-white"
           >
-            <Sparkles className="h-3.5 w-3.5" />
+            <Sparkles className="size-3.5" />
             {ex.label}
           </button>
         ))}
@@ -92,7 +91,7 @@ export function CalculatorView({
           onClick={handleCopyLink}
           className="flex items-center gap-1.5 rounded-lg border border-prism-muted-2/40 px-3.5 py-2 text-xs font-semibold text-prism-muted transition-colors hover:bg-prism-card"
         >
-          <Link2 className="h-3.5 w-3.5" />
+          <Link2 className="size-3.5" />
           {copied ? "Copied!" : "Copy link to this case"}
         </button>
       </div>
@@ -109,7 +108,7 @@ export function CalculatorView({
           ))}
           {formIssues(form).length > 0 && (
             <div className="mb-3 flex items-start gap-2 rounded-xl border border-prism-amber/40 bg-prism-amber/10 px-4 py-3 text-xs leading-snug text-prism-text">
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-prism-amber" />
+              <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-prism-amber" />
               <span>
                 Some values look physiologically implausible:{" "}
                 <strong>
