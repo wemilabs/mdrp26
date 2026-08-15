@@ -97,7 +97,7 @@ export function CalculatorView({
           className="flex items-center gap-1.5 rounded-lg border border-prism-muted-2/40 px-3.5 py-2 text-xs font-semibold text-prism-muted transition-colors hover:bg-prism-card"
         >
           <Link2 className="size-3.5" />
-          {copied ? "Copied!" : "Copy link to this case"}
+          {copied ? "Copied!" : "Copy link"}
         </button>
       </div>
 
