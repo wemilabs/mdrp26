@@ -4,7 +4,7 @@ export interface TreeNode {
   c: number[]; // split conditions
   f: number[]; // split feature indices
   w: number[]; // node/leaf weights
-};
+}
 
 export interface ModelExport {
   base_score: number;
@@ -16,40 +16,41 @@ export interface ModelExport {
   scales: number[];
   cat_modes: string[];
   cat_categories: string[][];
-};
+}
 
 export type PatientFormValues = Record<string, string | number>;
 
 export interface RankedFactor {
   name: string;
   value: number;
-};
+}
 
 export interface PredictionResult {
   probability: number;
   ranked: RankedFactor[];
-};
+}
 
 export interface RiskTier {
   label: "Low" | "Moderate" | "Elevated" | "High";
   colorVar: string;
-};
+}
 
 export interface Recommendation {
   tierLabel: string;
   summary: string;
   items: { factor: string; advice: string }[];
-};
+}
 
 export interface SavedAssessment {
   id: string;
   savedAt: number;
   label: string;
+  patientId?: string;
   form: PatientFormValues;
   probability: number;
   ranked: RankedFactor[];
   tierLabel: RiskTier["label"];
-};
+}
 
 export type FieldType = "number" | "select";
 
@@ -66,9 +67,9 @@ export interface FieldDefinition {
   modifiable?: boolean;
   normalRange?: [number, number];
   plausibleRange?: [number, number];
-};
+}
 
 export interface FieldGroup {
   title: string;
   fields: FieldDefinition[];
-};
+}

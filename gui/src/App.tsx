@@ -38,9 +38,11 @@ export default function App() {
   );
   const [result, setResult] = useState<PredictionResult | null>(null);
   const [reportHtml, setReportHtml] = useState<string | null>(null);
+  const [patientId, setPatientId] = useState<string>("");
 
   const handleExample = (key: string) => {
     setForm(EXAMPLE_PATIENTS[key].values);
+    setPatientId("");
     setResult(null);
   };
 
@@ -53,8 +55,9 @@ export default function App() {
     setResult(predict(form));
   };
 
-  const handleLoadForm = (values: PatientFormValues) => {
+  const handleLoadForm = (values: PatientFormValues, id?: string) => {
     setForm(values);
+    setPatientId(id ?? "");
     setResult(null);
   };
 
@@ -69,11 +72,13 @@ export default function App() {
               <CalculatorView
                 form={form}
                 result={result}
+                patientId={patientId}
                 onChange={handleChange}
                 onCalculate={handleCalculate}
                 onExample={handleExample}
                 onShowReport={setReportHtml}
                 onLoadForm={handleLoadForm}
+                onPatientIdChange={setPatientId}
               />
             }
           />
