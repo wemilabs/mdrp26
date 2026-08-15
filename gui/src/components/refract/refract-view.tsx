@@ -24,21 +24,25 @@ import { WhatIfPanel } from "./what-if-panel";
 interface CalculatorViewProps {
   form: PatientFormValues;
   result: PredictionResult | null;
+  patientId: string;
   onChange: (key: string, value: string) => void;
   onCalculate: () => void;
   onExample: (key: string) => void;
   onShowReport: (html: string) => void;
-  onLoadForm: (form: PatientFormValues) => void;
+  onLoadForm: (form: PatientFormValues, patientId?: string) => void;
+  onPatientIdChange: (value: string) => void;
 }
 
 export function CalculatorView({
   form,
   result,
+  patientId,
   onChange,
   onCalculate,
   onExample,
   onShowReport,
   onLoadForm,
+  onPatientIdChange,
 }: CalculatorViewProps) {
   const [history, setHistory] = useState<SavedAssessment[]>(loadHistory);
   const [copied, setCopied] = useState(false);
@@ -61,6 +65,7 @@ export function CalculatorView({
         id: crypto.randomUUID(),
         savedAt: Date.now(),
         label,
+        patientId: patientId || undefined,
         form: { ...form },
         probability: result.probability,
         ranked: result.ranked,
@@ -96,6 +101,19 @@ export function CalculatorView({
         </button>
       </div>
 
+      <div className="mb-4">
+        <label className="mb-1 block text-xs font-medium text-prism-muted">
+          Patient / Case ID
+        </label>
+        <input
+          type="text"
+          value={patientId}
+          onChange={(e) => onPatientIdChange(e.target.value)}
+          placeholder="e.g. MRN-12345, Bed 12"
+          className="w-full max-w-md rounded-lg border border-prism-border bg-white px-3 py-2 text-sm text-prism-text outline-none transition-shadow focus:border-prism-teal focus:ring-2 focus:ring-prism-teal/20"
+        />
+      </div>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.3fr_1fr]">
         <div>
           {FIELD_GROUPS.map((g) => (
@@ -129,7 +147,7 @@ export function CalculatorView({
           </button>
           <HistoryPanel
             history={history}
-            onLoad={onLoadForm}
+            onLoad={(entry) => onLoadForm(entry.form, entry.patientId)}
             onDelete={(id) => setHistory(deleteAssessment(id))}
           />
         </div>
@@ -138,6 +156,7 @@ export function CalculatorView({
           <ResultPanel
             result={result}
             form={form}
+            patientId={patientId}
             onShowReport={onShowReport}
             onSave={handleSave}
           />

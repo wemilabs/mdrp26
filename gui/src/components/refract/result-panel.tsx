@@ -10,6 +10,7 @@ import { WaterfallChart } from "./waterfall-chart";
 interface ResultPanelProps {
   result: PredictionResult | null;
   form: PatientFormValues;
+  patientId: string;
   onShowReport: (html: string) => void;
   onSave: (label: string) => void;
 }
@@ -19,6 +20,7 @@ type FactorViewMode = "bars" | "waterfall";
 export function ResultPanel({
   result,
   form,
+  patientId,
   onShowReport,
   onSave,
 }: ResultPanelProps) {
@@ -152,7 +154,9 @@ export function ResultPanel({
 
       <button
         onClick={() =>
-          onShowReport(buildPatientReportHTML(form, result, recs, band))
+          onShowReport(
+            buildPatientReportHTML(form, result, recs, band, patientId),
+          )
         }
         className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-prism-teal py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-prism-dark"
       >

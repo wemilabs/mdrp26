@@ -1,12 +1,12 @@
 import { ChevronDown, ChevronUp, History, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
 import { riskTier } from "../../engine/advice-engine";
-import type { PatientFormValues, SavedAssessment } from "../../types";
+import type { SavedAssessment } from "../../types";
 import { ComparisonView } from "./comparison-view";
 
 interface HistoryPanelProps {
   history: SavedAssessment[];
-  onLoad: (form: PatientFormValues) => void;
+  onLoad: (entry: SavedAssessment) => void;
   onDelete: (id: string) => void;
 }
 
@@ -80,13 +80,14 @@ export function HistoryPanel({ history, onLoad, onDelete }: HistoryPanelProps) {
                         checked={selectedIds.includes(entry.id)}
                         onChange={() => toggleSelect(entry.id)}
                         className="accent-prism-teal"
-                        aria-label={`Select ${entry.label} for comparison`}
+                        aria-label={`Select ${entry.patientId || entry.label} for comparison`}
                       />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-xs font-semibold text-prism-text">
-                          {entry.label}
+                          {entry.patientId || entry.label}
                         </div>
-                        <div className="text-[10.5px] text-prism-muted-2">
+                        <div className="truncate text-[10.5px] text-prism-muted-2">
+                          {entry.patientId ? `${entry.label} · ` : ""}
                           {relativeTime(entry.savedAt)}
                         </div>
                       </div>
@@ -100,7 +101,7 @@ export function HistoryPanel({ history, onLoad, onDelete }: HistoryPanelProps) {
                         {(entry.probability * 100).toFixed(1)}%
                       </span>
                       <button
-                        onClick={() => onLoad(entry.form)}
+                        onClick={() => onLoad(entry)}
                         title="Load into form"
                         className="rounded-md p-1.5 text-prism-teal transition-colors hover:bg-prism-card"
                       >
