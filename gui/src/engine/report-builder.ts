@@ -57,7 +57,13 @@ function reportShell(
     td:first-child{color:#5B7472;}
     h2{font-family: system-ui, sans-serif; font-size:15px; color:#028090; margin:0 0 4px;}
     .disclaimer{margin-top:22px; font-family: system-ui, sans-serif; font-size:11.5px; color:#5B7472; background:#EAF3F2; padding:14px 18px; border-radius:10px; line-height:1.5;}
-    @media print { body{background:#fff;} .box{border:none;} }
+    .wf{margin-top:12px; font-family: system-ui, sans-serif;}
+    .wf-row{display:flex; align-items:center; gap:10px; margin-bottom:6px;}
+    .wf-label{width:140px; font-size:11.5px; color:#5B7472; text-align:right; flex-shrink:0;}
+    .wf-track{flex:1; height:13px; background:#EEF4F3; border-radius:4px; position:relative;}
+    .wf-bar{position:absolute; top:0; height:13px; border-radius:3px; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .wf-val{width:130px; font-size:11px; font-weight:600; flex-shrink:0;}
+    @media print { body{background:#fff;} .box{border:none;} .wf-track{border:1px solid #EEF4F3;} }
   </style></head><body>
     <div class="header">
       <div class="kicker">${escapeHtml(kicker)}</div>
@@ -106,14 +112,24 @@ export function buildPatientReportHTML(
     )
     .join("");
 
-  const waterfallRows = buildWaterfallSteps(result)
+  const steps = buildWaterfallSteps(result);
+  const wfColors = { anchor: "#0F3A3C", up: "#C4432B", down: "#00A896" };
+  const wfScale =
+    Math.max(...steps.map((s) => Math.max(s.from, s.to)), 0.01) * 1.08;
+  const waterfallRows = steps
     .map((s) => {
+      const left = (Math.min(s.from, s.to) / wfScale) * 100;
+      const width = Math.max((Math.abs(s.to - s.from) / wfScale) * 100, 0.8);
       const deltaPts = (s.to - s.from) * 100;
-      const delta =
+      const value =
         s.kind === "anchor"
-          ? "&mdash;"
-          : `<span style="color:${s.kind === "up" ? "#C4432B" : "#00A896"};font-weight:600;">${deltaPts >= 0 ? "+" : ""}${deltaPts.toFixed(1)} pts</span>`;
-      return `<tr><td>${escapeHtml(s.name)}</td><td>${delta}</td><td>${(s.to * 100).toFixed(1)}%</td></tr>`;
+          ? `<span style="color:#1F3436;">${(s.to * 100).toFixed(1)}%</span>`
+          : `<span style="color:${wfColors[s.kind]};">${deltaPts >= 0 ? "+" : ""}${deltaPts.toFixed(1)} pts &rarr; ${(s.to * 100).toFixed(1)}%</span>`;
+      return `<div class="wf-row">
+        <div class="wf-label">${escapeHtml(s.name)}</div>
+        <div class="wf-track"><div class="wf-bar" style="left:${left.toFixed(2)}%;width:${width.toFixed(2)}%;background:${wfColors[s.kind]};"></div></div>
+        <div class="wf-val">${value}</div>
+      </div>`;
     })
     .join("");
 
@@ -126,7 +142,7 @@ export function buildPatientReportHTML(
       <h2 style="margin-top:22px;">Top Contributing Factors</h2>
       <table><thead><tr><th>Factor</th><th>Direction</th></tr></thead><tbody>${factorRows}</tbody></table>
       <h2 style="margin-top:22px;">How the Estimate Was Built</h2>
-      <table><thead><tr><th>Step</th><th>&Delta; risk</th><th>Cumulative risk</th></tr></thead><tbody>${waterfallRows}</tbody></table>
+      <div class="wf">${waterfallRows}</div>
       <p style="font-family: system-ui, sans-serif; font-size:11px; color:#5B7472;">Starting from a typical cohort patient (median inputs), each factor shows how this patient differs. Steps are shown in probability space for readability; the model combines factors on the log-odds scale, so step sizes depend on their order (largest contributions first).</p>
       <h2 style="margin-top:22px;">Suggested Next Steps</h2>
       <p style="font-family: system-ui, sans-serif; font-size:13px; background:#EAF3F2; padding:12px 14px; border-radius:8px;">${escapeHtml(recs.summary)}</p>
