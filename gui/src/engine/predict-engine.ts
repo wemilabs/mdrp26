@@ -1,5 +1,11 @@
 import modelData from "../data/model.json";
-import type { ModelExport, PatientFormValues, PredictionResult, RankedFactor, TreeNode } from "../types";
+import type {
+  ModelExport,
+  PatientFormValues,
+  PredictionResult,
+  RankedFactor,
+  TreeNode,
+} from "../types";
 
 const MODEL = modelData as unknown as ModelExport;
 
@@ -26,7 +32,7 @@ const FEATURE_LABELS: Record<string, string> = {
 };
 
 const LABEL_TO_FIELD: Record<string, string> = Object.fromEntries(
-  Object.entries(FEATURE_LABELS).map(([key, label]) => [label, key])
+  Object.entries(FEATURE_LABELS).map(([key, label]) => [label, key]),
 );
 
 function sigmoid(x: number): number {
@@ -63,7 +69,11 @@ function buildFeatureVector(form: PatientFormValues): number[] {
   return vec;
 }
 
-function traverseTree(tree: TreeNode, x: number[], contribs: Record<number, number>): number {
+function traverseTree(
+  tree: TreeNode,
+  x: number[],
+  contribs: Record<number, number>,
+): number {
   let node = 0;
   let pathValue = tree.w[0];
   while (tree.l[node] !== -1) {
@@ -81,19 +91,29 @@ function traverseTree(tree: TreeNode, x: number[], contribs: Record<number, numb
 
 /**
  * Runs the embedded, validated gradient-boosted model against a patient's
- * input values entirely on the client, returning a mortality probability
- * and a ranked list of contributing clinical factors.
+ * input values entirely on the client, returning a mortality probability,
+ * a ranked list of contributing clinical factors, and the per-tree leaf
+ * logits + raw margin variance used for uncertainty estimation.
  */
 export function predict(form: PatientFormValues): PredictionResult {
   const x = buildFeatureVector(form);
   const contribs: Record<number, number> = {};
+  const treeLogits: number[] = [];
   let margin = 0;
 
   MODEL.trees.forEach((tree) => {
-    margin += traverseTree(tree, x, contribs);
+    const leafValue = traverseTree(tree, x, contribs);
+    treeLogits.push(leafValue);
+    margin += leafValue;
   });
 
   const probability = sigmoid(margin + BASE_LOGIT);
+
+  const meanLeaf = treeLogits.reduce((s, v) => s + v, 0) / treeLogits.length;
+  const marginVariance = treeLogits.reduce(
+    (s, v) => s + (v - meanLeaf) ** 2,
+    0,
+  );
 
   const byName: Record<string, number> = {};
 
@@ -104,7 +124,10 @@ export function predict(form: PatientFormValues): PredictionResult {
       const base = MODEL.numeric_cols[idx].replace(/_(mean|min|max)$/, "");
       name = FEATURE_LABELS[base] ?? base;
     } else {
-      name = idx < MODEL.numeric_cols.length + MODEL.cat_categories[0].length ? "Gender" : "Admission type";
+      name =
+        idx < MODEL.numeric_cols.length + MODEL.cat_categories[0].length
+          ? "Gender"
+          : "Admission type";
     }
     byName[name] = (byName[name] ?? 0) + val;
   });
@@ -113,8 +136,7 @@ export function predict(form: PatientFormValues): PredictionResult {
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
 
-  return { probability, ranked };
+  return { probability, ranked, treeLogits, marginVariance };
 }
 
 export { BASE_LOGIT, FEATURE_LABELS, LABEL_TO_FIELD, MODEL, sigmoid };
-

@@ -5,14 +5,15 @@ import {
   holdoutAuroc,
   overlapData,
   shapTop,
+  uncertaintyCalibration,
 } from "../data/spectrum-data";
 import type {
   PatientFormValues,
   PredictionResult,
   Recommendation,
+  UncertaintyInterval,
 } from "../types";
 import { riskTier } from "./advice-engine";
-import type { SensitivityBand } from "./sensitivity";
 import { buildWaterfallSteps } from "./waterfall";
 
 function escapeHtml(str: unknown): string {
@@ -81,7 +82,7 @@ export function buildPatientReportHTML(
   form: PatientFormValues,
   result: PredictionResult,
   recs: Recommendation,
-  band?: SensitivityBand,
+  interval?: UncertaintyInterval,
   patientId?: string,
 ): string {
   const tier = riskTier(result.probability);
@@ -138,7 +139,8 @@ export function buildPatientReportHTML(
       <div class="kicker" style="color:#5B7472;">PREDICTED MORTALITY RISK</div>
       <span class="risk-num" style="color:${tier.colorVar}">${(result.probability * 100).toFixed(1)}%</span>
       <span class="tier" style="background:color-mix(in srgb, ${tier.colorVar} 15%, white); color:${tier.colorVar};">${tier.label} risk</span>
-      ${band ? `<p style="font-family: system-ui, sans-serif; font-size:12px; color:#5B7472; margin:8px 0 0;">Sensitivity: ${(band.low * 100).toFixed(1)}%&ndash;${(band.high * 100).toFixed(1)}% under &plusmn;5% input variation &mdash; not a confidence interval.</p>` : ""}
+      ${interval ? `<p style="font-family: system-ui, sans-serif; font-size:12px; color:#5B7472; margin:8px 0 0;"><strong>${(interval.level * 100).toFixed(0)}% uncertainty interval:</strong> ${(interval.low * 100).toFixed(1)}%&ndash;${(interval.high * 100).toFixed(1)}% <span style="font-size:10px; color:#8A9D9B;">(${interval.tier}${interval.calibrated ? "" : ", uncalibrated"})</span></p>` : ""}
+      ${interval ? `<p style="font-family: system-ui, sans-serif; font-size:10.5px; color:#8A9D9B; margin:4px 0 0; line-height:1.5;">${interval.calibrated ? "Derived from the variance across the model's 200 boosted trees (infinitesimal-jackknife), calibrated against 5-fold cross-validation retraining variance. This is a confidence interval on the predicted probability (model uncertainty), not a prediction interval on the binary outcome. The cohort is small (n=98, 10 deaths), so the calibration is itself uncertain." : "Derived from the variance across the model's 200 boosted trees (infinitesimal-jackknife). No calibration scalar is available, so this is an uncalibrated dispersion estimate reflecting relative model uncertainty only."}</p>` : ""}
       <h2 style="margin-top:22px;">Top Contributing Factors</h2>
       <table><thead><tr><th>Factor</th><th>Direction</th></tr></thead><tbody>${factorRows}</tbody></table>
       <h2 style="margin-top:22px;">How the Estimate Was Built</h2>
@@ -208,6 +210,16 @@ export function buildDashboardReportHTML(): string {
       <table><thead><tr><th>Method pair</th><th>Top-5 overlap</th></tr></thead><tbody>${overlapRows}</tbody></table>
       <h2 style="margin-top:20px;">Significant Associations</h2>
       <table><thead><tr><th>Variable</th><th>p-value</th></tr></thead><tbody>${bivRows}</tbody></table>
+      <h2 style="margin-top:20px;">Uncertainty Calibration</h2>
+      <table><tbody>
+        <tr><td>Method</td><td>${escapeHtml(uncertaintyCalibration.method)}</td></tr>
+        <tr><td>Calibration scalar (\u03bb)</td><td>${uncertaintyCalibration.lambda !== null ? uncertaintyCalibration.lambda.toFixed(4) : "Not calibrated (run script 09)"}</td></tr>
+        <tr><td>R\u00b2 (sqrt scale)</td><td>${uncertaintyCalibration.rSquared !== null ? uncertaintyCalibration.rSquared.toFixed(3) : "\u2014"}</td></tr>
+        <tr><td>Empirical coverage</td><td>${uncertaintyCalibration.coverage !== null ? `${(uncertaintyCalibration.coverage * 100).toFixed(0)}%` : "\u2014"}</td></tr>
+        <tr><td>Trees used for variance</td><td>${uncertaintyCalibration.nTrees}</td></tr>
+        <tr><td>CV folds</td><td>${uncertaintyCalibration.nFolds}</td></tr>
+      </tbody></table>
+      <p style="font-family: system-ui, sans-serif; font-size:10.5px; color:#8A9D9B; margin:6px 0 0; line-height:1.5;">The 95% uncertainty interval is derived from tree-variance (infinitesimal-jackknife) scaled by \u03bb to match observed 5-fold CV retraining variance. It is a confidence interval on the predicted probability, not a prediction interval on the binary outcome.</p>
     </div>`;
 
   return reportShell(

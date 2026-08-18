@@ -1,4 +1,4 @@
-# PRISM — Explainable ICU Mortality Risk Assessment
+# PRISM | Explainable ICU Mortality Risk Assessment
 
 A client-only React + TypeScript application that runs a validated XGBoost
 model directly in the browser to estimate in-hospital ICU mortality risk,

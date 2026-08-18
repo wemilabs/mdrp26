@@ -7,22 +7,18 @@ interface BatchSummaryProps {
 export function BatchSummary({ rows }: BatchSummaryProps) {
   const count = rows.length;
   const avgRisk = rows.reduce((sum, r) => sum + r.probability, 0) / count;
-  const tierCounts = rows.reduce<Record<string, number>>((acc, r) => {
-    acc[r.tier.label] = (acc[r.tier.label] ?? 0) + 1;
-    return acc;
-  }, {});
-  const flaggedCount = rows.filter((r) => r.issues.length > 0).length;
-
-  const tierBreakdown = ["Low", "Moderate", "Elevated", "High"]
-    .filter((t) => tierCounts[t])
-    .map((t) => `${tierCounts[t]} ${t.toLowerCase()}`)
-    .join(" · ");
+  const avgWidth =
+    rows.reduce((sum, r) => sum + r.uncertainty.width, 0) / count;
+  const wideCount = rows.filter((r) => r.uncertainty.tier === "wide").length;
 
   const stats = [
     { value: String(count), label: "Patients scored" },
     { value: `${(avgRisk * 100).toFixed(1)}%`, label: "Average risk" },
-    { value: tierBreakdown || "—", label: "Risk tiers" },
-    { value: String(flaggedCount), label: "Rows with implausible values" },
+    {
+      value: `${(avgWidth * 100).toFixed(1)} pp`,
+      label: "Mean 95% UI width",
+    },
+    { value: String(wideCount), label: "Wide-uncertainty rows" },
   ];
 
   return (

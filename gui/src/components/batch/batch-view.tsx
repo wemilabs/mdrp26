@@ -7,8 +7,13 @@ import { FIELD_GROUPS } from "../../data/fields";
 import { riskTier } from "../../engine/advice-engine";
 import { predict } from "../../engine/predict-engine";
 import { formToParams } from "../../engine/share";
+import { uncertaintyInterval } from "../../engine/uncertainty";
 import { formIssues } from "../../engine/validation";
-import type { PatientFormValues, RiskTier } from "../../types";
+import type {
+  PatientFormValues,
+  RiskTier,
+  UncertaintyInterval,
+} from "../../types";
 import { BatchSummary } from "./batch-summary";
 
 export interface BatchRow {
@@ -18,6 +23,7 @@ export interface BatchRow {
   tier: RiskTier;
   topFactors: string[];
   issues: string[];
+  uncertainty: UncertaintyInterval;
 }
 
 const FIELD_KEYS = FIELD_GROUPS.flatMap((g) => g.fields.map((f) => f.key));
@@ -44,6 +50,7 @@ function scoreRows(records: Record<string, string>[]): BatchRow[] {
       tier: riskTier(result.probability),
       topFactors: result.ranked.slice(0, 3).map((r) => r.name),
       issues: formIssues(form).map((issue) => issue.label),
+      uncertainty: uncertaintyInterval(result, form),
     };
   });
 }
@@ -92,6 +99,10 @@ export function BatchContent() {
       ...Object.fromEntries(FIELD_KEYS.map((key) => [key, r.form[key]])),
       predicted_risk_pct: (r.probability * 100).toFixed(1),
       risk_tier: r.tier.label,
+      risk_95_low_pct: (r.uncertainty.low * 100).toFixed(1),
+      risk_95_high_pct: (r.uncertainty.high * 100).toFixed(1),
+      uncertainty_width_pct: (r.uncertainty.width * 100).toFixed(1),
+      uncertainty_tier: r.uncertainty.tier,
       top_factors: r.topFactors.join("; "),
       implausible_values: r.issues.join("; "),
     }));
@@ -159,7 +170,7 @@ export function BatchContent() {
                     <th className="px-2 py-2">Age</th>
                     <th className="px-2 py-2">Gender</th>
                     <th className="px-2 py-2">Admission</th>
-                    <th className="px-2 py-2">Risk</th>
+                    <th className="px-2 py-2">Risk (95% UI)</th>
                     <th className="px-2 py-2">Tier</th>
                     <th className="px-2 py-2">Top factors</th>
                     <th className="px-2 py-2" />
@@ -182,6 +193,10 @@ export function BatchContent() {
                         style={{ color: row.tier.colorVar }}
                       >
                         {(row.probability * 100).toFixed(1)}%
+                        <span className="block text-[10px] font-normal text-prism-muted-2">
+                          ({(row.uncertainty.low * 100).toFixed(1)}&ndash;
+                          {(row.uncertainty.high * 100).toFixed(1)})
+                        </span>
                       </td>
                       <td className="px-2 py-2">
                         <span

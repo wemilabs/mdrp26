@@ -16,6 +16,8 @@ export interface ModelExport {
   scales: number[];
   cat_modes: string[];
   cat_categories: string[][];
+  uncertainty_lambda?: number;
+  uncertainty_method?: string;
 }
 
 export type PatientFormValues = Record<string, string | number>;
@@ -28,6 +30,20 @@ export interface RankedFactor {
 export interface PredictionResult {
   probability: number;
   ranked: RankedFactor[];
+  treeLogits: number[];
+  marginVariance: number;
+}
+
+export type UncertaintyTier = "narrow" | "medium" | "wide";
+
+export interface UncertaintyInterval {
+  low: number;
+  high: number;
+  level: number;
+  width: number;
+  tier: UncertaintyTier;
+  method: string;
+  calibrated: boolean;
 }
 
 export interface RiskTier {

@@ -66,6 +66,7 @@ script saves for the next.
 | `06_performance_figures.py` | 4.7 | ROC, PR, CV bar chart, calibration, confusion matrices |
 | `07_explainability_analysis.py` | 4.8 | SHAP, RF importance, LR coefficients, cross-method overlap |
 | `08_explainability_figures.py` | 4.8 | SHAP summary plot, explanation comparison chart |
+| `09_uncertainty_calibration.py` | 4.8 | Calibrates tree-variance uncertainty (λ) vs. 5-fold CV retraining variance; patches `model.json` |
 
 ### Script details
 
@@ -138,6 +139,16 @@ Outputs: `shap_importance.csv`, `shap_values.npy`, `X_test_trans.npy`,
 top 12 features) and `fig7_explanation_comparison.png` (top-8 SHAP vs. top-8 RF
 side-by-side horizontal bars), 150 DPI, no embedded titles.
 
+**`09_uncertainty_calibration.py`** — Calibrates the GUI's tree-variance
+uncertainty estimate. The 200 XGBoost trees each emit a leaf log-odds; their
+spread `σ²_raw = Σ_t (w_t − w̄)²` is a raw dispersion measure (infinitesimal
+jackknife form). This script fits a scalar `λ` so that `λ²·σ²_raw` matches the
+observed 5-fold CV retraining variance of `p̂` (the ground-truth proxy for
+epistemic uncertainty), via OLS through the origin on the √-scale. Also computes
+empirical coverage and per-patient 95% Monte Carlo intervals.
+Output: `uncertainty_calibration.json` + patches `gui/src/data/model.json` with
+`uncertainty_lambda` and `uncertainty_method`.
+
 ### Python dependencies
 
 No `requirements.txt` is pinned yet; the scripts import:
@@ -187,6 +198,7 @@ pnpm dev         # local dev server
 pnpm build       # production build → dist/
 pnpm preview     # preview the production build
 pnpm lint        # oxlint
+pnpm test        # vitest (unit tests)
 ```
 
 ### Tech stack
@@ -196,7 +208,7 @@ pnpm lint        # oxlint
   token set in `src/index.css` (no `tailwind.config.js`)
 - **Recharts 3** (dashboard & waterfall charts), **lucide-react** (icons),
   **papaparse** (batch CSV import/export)
-- Tooling: **oxlint**, Playwright + jsdom (testing), pnpm
+- Tooling: **oxlint**, **vitest** (unit tests), Playwright + jsdom (e2e), pnpm
 
 Design tokens (defined in `src/index.css`): dark teal `#0f3a3c`, teal `#028090`,
 seafoam `#00a896`, mint `#02c39a`, amber `#d98c2b`, red `#c4432b`, light bg
@@ -216,7 +228,7 @@ src/
     refract/              Patient risk calculator view
       refract-view.tsx      Form + presets + copy-link + implausible-value warning
       form-group.tsx        Grouped inputs with validation flags & cohort percentiles
-      result-panel.tsx      Probability, tier badge, sensitivity band, factor
+      result-panel.tsx      Probability, tier badge, 95% uncertainty interval, factor
                             bars/waterfall toggle, advice, save assessment
       factor-bars.tsx       Reusable top-factor bar list
       waterfall-chart.tsx   SHAP-style waterfall (Recharts)
@@ -224,29 +236,37 @@ src/
       history-panel.tsx     Saved assessments (localStorage) + compare selection
       comparison-view.tsx   Side-by-side comparison of two saved assessments
     spectrum/             Model performance dashboard view
-      spectrum-view.tsx     Stat row, 4 chart cards, 2 list cards
+      spectrum-view.tsx     Stat row, 4 chart cards, 2 list cards, uncertainty
+                            distribution + calibration cards
       stat-row.tsx          98 stays · 10.2% mortality · 0.818 AUROC · 59 features
       chart-card.tsx        Card wrapper for Recharts charts
       list-card.tsx         Label/value tables
     batch/
-      batch-view.tsx        CSV template download, upload, scored table, export
+      batch-view.tsx        CSV template download, upload, scored table with
+                            95% uncertainty intervals, export
+      batch-summary.tsx     Summary stats (count, avg risk, mean UI width)
   engine/
     predict-engine.ts     Client-side XGBoost evaluation + feature attribution
+                          + per-tree leaf logits for uncertainty estimation
     advice-engine.ts      Risk tiering + clinical recommendations
     report-builder.ts     Print-optimized HTML report generation
     waterfall.ts          Waterfall steps relative to a median "typical patient"
     validation.ts         Reference-range checks + cohort z-scores/percentiles
-    sensitivity.ts        ±5% input-perturbation band around the prediction
+    uncertainty.ts        95% uncertainty interval via tree-variance (IJ) +
+                          Monte Carlo, calibrated against CV retraining variance
+    uncertainty.test.ts   Vitest unit tests for uncertainty.ts
     history-store.ts      localStorage CRUD for saved assessments (cap 50)
     share.ts              Form ⇄ URL query-param serialization + clipboard helper
   data/
-    model.json            Exported model (trees + preprocessing params)
+    model.json            Exported model (trees + preprocessing params +
+                          uncertainty_lambda calibration scalar)
     fields.ts             22 input field definitions in 3 groups, with slider
                           ranges, normal/plausible clinical ranges
     examples.ts           lowRisk / highRisk example presets
-    spectrum-data.ts      Hard-coded evaluation results for the dashboard
+    spectrum-data.ts      Hard-coded evaluation results + uncertainty calibration
+                          metadata for the dashboard
   types/index.ts          TreeNode, ModelExport, PredictionResult, RiskTier,
-                          SavedAssessment, ...
+                          UncertaintyInterval, SavedAssessment, ...
 ```
 
 ### How the prediction engine works
@@ -257,25 +277,33 @@ src/
    training-set means/scales (invalid/missing values fall back to training-set
    medians); `gender` (2) and `admission_type` (6) are one-hot encoded
    (missing → training modes `M`, `EW EMER.`) → 65-element vector.
-2. **Tree evaluation** — walks all 100 exported trees
-   (`{l, r, c, f, w}` arrays per tree), accumulating the raw margin.
+2. **Tree evaluation** — walks all 200 exported trees
+   (`{l, r, c, f, w}` arrays per tree), accumulating the raw margin and
+   collecting per-tree leaf logits for uncertainty estimation.
 3. **Probability** — `sigmoid(margin + logit(base_score))` with
    `base_score = 0.48276547`.
 4. **Attribution** — a tree path-decomposition accumulates per-feature
    contributions (node-weight deltas along the decision path), then aggregates
    mean/min/max variants of each base measurement into a single ranked factor
    list — a fast SHAP-style explanation computed live in the browser.
+5. **Uncertainty** — the per-tree leaf logits yield a raw margin variance
+   `σ²_raw = Σ_t (w_t − w̄)²` (infinitesimal-jackknife form). `uncertainty.ts`
+   scales this by `λ²` (calibrated against 5-fold CV retraining variance via
+   Python script 09) and draws 400 Monte Carlo samples on the log-odds margin
+   to produce a 95% confidence interval on the predicted probability. Falls
+   back to an uncalibrated dispersion estimate if `λ` is absent from
+   `model.json`.
 
 `advice-engine.ts` maps probability to tiers — **Low** < 5%, **Moderate** < 15%,
 **Elevated** < 30%, **High** ≥ 30% — with tier summaries and 20 factor-specific
 clinical recommendations (top-5 risk-increasing factors shown).
 
 `report-builder.ts` generates two print-optimized HTML documents: a **patient
-report** (risk %, tier, sensitivity band, top-8 factor table, "how the estimate
-was built" waterfall table, recommendations, input values, disclaimer) and a
-**performance report** (cohort stats, holdout & CV AUROC tables, top-5 SHAP,
-cross-method agreement, significant associations). All user values are
-HTML-escaped before interpolation.
+report** (risk %, tier, 95% uncertainty interval + methodology, top-8 factor
+table, "how the estimate was built" waterfall table, recommendations, input
+values, disclaimer) and a **performance report** (cohort stats, holdout & CV
+AUROC tables, top-5 SHAP, cross-method agreement, significant associations,
+uncertainty calibration). All user values are HTML-escaped before interpolation.
 
 ### Interactive analysis features
 
@@ -294,17 +322,24 @@ HTML-escaped before interpolation.
   percentile (normal approximation from the exported means/scales); values with
   |z| > 3 get an "outside training range" badge. Implausible values trigger a
   warning but never block calculation.
-- **Sensitivity band** — the min–max predicted risk when each numeric input is
-  perturbed ±5%, shown as a band around the headline probability and explicitly
-  labeled *not a confidence interval*.
+- **Uncertainty visualization** — a 95% confidence interval on the predicted
+  probability, derived from the variance across the model's 200 boosted trees
+  (infinitesimal-jackknife form), calibrated against 5-fold CV retraining
+  variance. Shown as a band around the headline probability with a
+  narrow/medium/wide tier chip and a methodology tooltip. This is a confidence
+  interval on the predicted probability (model uncertainty about the estimate),
+  *not* a prediction interval on the binary outcome. Falls back to an
+  uncalibrated dispersion estimate if the calibration scalar (`λ`) is absent
+  from `model.json` (run Python script 09 to populate it).
 - **Assessment history & comparison** — assessments can be saved with a label
   to `localStorage` (per-browser, capped at 50), reloaded into the form, and
   compared two-at-a-time side by side with per-factor log-odds deltas.
 - **Shareable case links** — the current form serializes into URL query
   parameters (`/refract?age=78&…`); opening such a link restores the case.
 - **Batch CSV scoring** (`/batch`) — download a header template, upload a
-  cohort CSV, and get a scored table (risk %, tier, top-3 factors,
-  implausible-value flags) with CSV export — all client-side via papaparse.
+  cohort CSV, and get a scored table (risk %, 95% uncertainty interval, tier,
+  top-3 factors, implausible-value flags) with CSV export — all client-side
+  via papaparse.
 
 ### Input fields (22)
 
@@ -333,7 +368,9 @@ range of the tool.
 3. Export the fitted XGBoost model + preprocessing statistics to
    `gui/src/data/model.json` (schema: `base_score`, `trees[]` with
    `l/r/c/f/w` arrays, `numeric_cols`, `categorical_cols`, `medians`, `means`,
-   `scales`, `cat_modes`, `cat_categories`) and refresh `spectrum-data.ts`.
+   `scales`, `cat_modes`, `cat_categories`, `uncertainty_lambda`,
+   `uncertainty_method`) and refresh `spectrum-data.ts`. Run script 09 to
+   calibrate `uncertainty_lambda`.
 4. `pnpm build` in `gui/` → static site in `dist/`, deployable anywhere.
 
 ## Disclaimer

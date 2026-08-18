@@ -5,6 +5,7 @@
     "dev": "pnpm -C gui dev",
     "build": "pnpm -C gui build",
     "lint": "pnpm -C gui lint",
+    "test": "pnpm -C gui test",
     "preview": "pnpm -C gui preview",
     "install:gui": "pnpm -C gui install"
   }
