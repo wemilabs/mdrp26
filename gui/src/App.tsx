@@ -10,6 +10,8 @@ import {
 } from "react-router";
 import { BatchShell } from "./components/batch/batch-shell";
 import { ErrorBoundary } from "./components/error-boundary";
+import { OfflineIndicator } from "./components/offline-indicator";
+import { PwaToast } from "./components/pwa-toast";
 import { CalculatorShell } from "./components/refract/refract-shell";
 import { ReportModal } from "./components/report-modal";
 import { DashboardShell } from "./components/spectrum/spectrum-shell";
@@ -71,6 +73,8 @@ export default function App() {
       {reportHtml && (
         <ReportModal html={reportHtml} onClose={() => setReportHtml(null)} />
       )}
+
+      <PwaToast />
     </>
   );
 }
@@ -129,6 +133,7 @@ function Shell() {
   return (
     <div className="min-h-screen bg-prism-bg text-prism-text">
       <TopBar />
+      <OfflineIndicator />
       <main className="mx-auto max-w-6xl px-6 py-8">
         <ErrorBoundary>
           <Outlet />
