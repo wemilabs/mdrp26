@@ -11,10 +11,12 @@ const NUMERIC_KEYS = FIELD_GROUPS.flatMap((g) => g.fields)
   .filter((f) => f.type === "number")
   .map((f) => f.key);
 
-export function sensitivityBand(form: PatientFormValues): SensitivityBand {
-  const base = predict(form).probability;
-  let low = base;
-  let high = base;
+export function sensitivityBand(
+  form: PatientFormValues,
+  baseProbability: number,
+): SensitivityBand {
+  let low = baseProbability;
+  let high = baseProbability;
 
   NUMERIC_KEYS.forEach((key) => {
     const value = Number(form[key]);
