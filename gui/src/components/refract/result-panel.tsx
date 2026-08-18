@@ -32,7 +32,7 @@ export function ResultPanel({
   const tier = riskTier(result.probability);
   const top = result.ranked.slice(0, 6);
   const recs = getRecommendations(result.probability, result.ranked);
-  const band = sensitivityBand(form);
+  const band = sensitivityBand(form, result.probability);
   const scaleMax = Math.min(1, Math.max(band.high * 1.4, 0.05));
 
   return (
