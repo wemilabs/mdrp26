@@ -3,6 +3,7 @@ import {
   ChevronUp,
   RotateCcw,
   SlidersHorizontal,
+  Target,
 } from "lucide-react";
 import { useState } from "react";
 import { FIELD_GROUPS } from "../../data/fields";
@@ -34,6 +35,49 @@ function defaultKeys(result: PredictionResult): string[] {
     .filter((key): key is string => Boolean(key && FIELD_BY_KEY[key]));
 }
 
+interface Lever {
+  key: string;
+  label: string;
+  unit?: string;
+  targetValue: number;
+  baselineValue: number;
+  resultingRisk: number;
+  deltaPts: number;
+}
+
+function biggestLevers(
+  baselineForm: PatientFormValues,
+  baselineRisk: number,
+): Lever[] {
+  return MODIFIABLE_FIELDS.flatMap((f) => {
+    if (!f.normalRange) return [];
+    const baselineValue = Number(baselineForm[f.key]);
+    if (!Number.isFinite(baselineValue)) return [];
+    const targetValue = (f.normalRange[0] + f.normalRange[1]) / 2;
+    if (Math.abs(targetValue - baselineValue) < 1e-6) return [];
+    const resultingRisk = predict({
+      ...baselineForm,
+      [f.key]: targetValue,
+    }).probability;
+    const deltaPts = (resultingRisk - baselineRisk) * 100;
+    // Only show levers that actually reduce risk.
+    if (deltaPts >= 0) return [];
+    return [
+      {
+        key: f.key,
+        label: f.label,
+        unit: f.unit,
+        targetValue,
+        baselineValue,
+        resultingRisk,
+        deltaPts,
+      },
+    ];
+  })
+    .sort((a, b) => a.deltaPts - b.deltaPts)
+    .slice(0, 3);
+}
+
 export function WhatIfPanel({
   baselineForm,
   baselineResult,
@@ -47,14 +91,20 @@ export function WhatIfPanel({
   ];
   const remaining = MODIFIABLE_FIELDS.filter((f) => !shownKeys.includes(f.key));
   const hasOverrides = Object.keys(overrides).length > 0;
+  // React Compiler auto-memoizes — only re-runs when inputs change.
   const whatIfResult = hasOverrides
     ? predict({ ...baselineForm, ...overrides })
     : baselineResult;
+  const levers = biggestLevers(baselineForm, baselineResult.probability);
 
   const basePct = baselineResult.probability * 100;
   const whatIfPct = whatIfResult.probability * 100;
   const deltaPts = whatIfPct - basePct;
   const whatIfTier = riskTier(whatIfResult.probability);
+
+  const applyLever = (lever: Lever) => {
+    setOverrides((o) => ({ ...o, [lever.key]: lever.targetValue }));
+  };
 
   return (
     <div className="mt-4 rounded-2xl border border-prism-border bg-white p-5 shadow-sm">
@@ -99,6 +149,36 @@ export function WhatIfPanel({
             Adjust inputs to explore how the predicted risk would change. The
             baseline prediction stays untouched.
           </p>
+
+          {levers.length > 0 && (
+            <div className="mt-3 rounded-lg border border-prism-seafoam/30 bg-prism-seafoam/5 px-3 py-2.5">
+              <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-prism-seafoam">
+                <Target className="size-3" />
+                Biggest opportunities to reduce risk
+              </div>
+              <div className="space-y-1">
+                {levers.map((l) => (
+                  <button
+                    key={l.key}
+                    onClick={() => applyLever(l)}
+                    className="flex w-full items-center justify-between gap-2 rounded px-1.5 py-1 text-left text-[11px] transition-colors hover:bg-prism-seafoam/10"
+                  >
+                    <span className="min-w-0 flex-1 text-prism-text">
+                      <strong className="font-semibold">{l.label}</strong>{" "}
+                      <span className="text-prism-muted-2">
+                        {l.baselineValue}
+                        {l.unit ? ` ${l.unit}` : ""} &rarr; {l.targetValue}
+                        {l.unit ? ` ${l.unit}` : ""}
+                      </span>
+                    </span>
+                    <span className="shrink-0 font-semibold text-prism-seafoam">
+                      {l.deltaPts.toFixed(1)} pts
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="mt-4 space-y-3.5">
             {shownKeys.map((key) => {
