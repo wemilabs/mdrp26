@@ -15,5 +15,15 @@ script saves for the next.
 | 06_performance_figures.py | 4.7 | ROC, PR, CV bar chart, calibration, confusion matrices |
 | 07_explainability_analysis.py | 4.8 | SHAP, RF importance, LR coefficients, cross-method overlap |
 | 08_explainability_figures.py | 4.8 | SHAP summary plot, explanation comparison chart |
+| 09_uncertainty_calibration.py | 4.8 | Calibrates tree-variance uncertainty (lambda) against 5-fold CV retraining variance; patches model.json |
 
 All scripts use `random_state=42` throughout for reproducibility.
+
+### Uncertainty calibration (script 09)
+
+The GUI computes a raw per-patient dispersion `sigma2_raw` from the variance
+across the 200 XGBoost tree leaf weights (infinitesimal-jackknife form). Script
+09 calibrates a single scalar `lambda` so that `lambda^2 * sigma2_raw` matches
+the observed 5-fold CV retraining variance of `p_hat`. The calibrated `lambda`
+is written into `gui/src/data/model.json` as `uncertainty_lambda`, enabling the
+GUI to produce a defensible 95% uncertainty interval via Monte Carlo sampling.

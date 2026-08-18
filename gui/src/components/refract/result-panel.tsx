@@ -1,9 +1,13 @@
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, FileText, Save } from "lucide-react";
+import { AlertTriangle, FileText, Info, Save } from "lucide-react";
 import { useState } from "react";
 import { getRecommendations, riskTier } from "../../engine/advice-engine";
 import { buildPatientReportHTML } from "../../engine/report-builder";
-import { sensitivityBand } from "../../engine/sensitivity";
+import {
+  METHODOLOGY_TEXT,
+  UNCALIBRATED_TEXT,
+  uncertaintyInterval,
+} from "../../engine/uncertainty";
 import type { PatientFormValues, PredictionResult } from "../../types";
 import { FactorBars } from "./factor-bars";
 import { WaterfallChart } from "./waterfall-chart";
@@ -32,8 +36,9 @@ export function ResultPanel({
   const tier = riskTier(result.probability);
   const top = result.ranked.slice(0, 6);
   const recs = getRecommendations(result.probability, result.ranked);
-  const band = sensitivityBand(form, result.probability);
-  const scaleMax = Math.min(1, Math.max(band.high * 1.4, 0.05));
+  const interval = uncertaintyInterval(result, form);
+  const scaleMax = Math.min(1, Math.max(interval.high * 1.4, 0.05));
+  const [showMethodology, setShowMethodology] = useState(false);
 
   return (
     <div className="rounded-2xl border border-prism-border bg-white p-6 shadow-sm">
@@ -74,8 +79,8 @@ export function ResultPanel({
           <div
             className="absolute h-2 rounded-full"
             style={{
-              left: `${(band.low / scaleMax) * 100}%`,
-              width: `${Math.max(((band.high - band.low) / scaleMax) * 100, 1)}%`,
+              left: `${(interval.low / scaleMax) * 100}%`,
+              width: `${Math.max(((interval.high - interval.low) / scaleMax) * 100, 1)}%`,
               backgroundColor: `color-mix(in srgb, ${tier.colorVar} 35%, white)`,
             }}
           />
@@ -87,11 +92,37 @@ export function ResultPanel({
             }}
           />
         </div>
-        <p className="mt-1.5 text-[10.5px] leading-snug text-prism-muted-2">
-          Sensitivity: {(band.low * 100).toFixed(1)}%&ndash;
-          {(band.high * 100).toFixed(1)}% under &plusmn;5% input variation
-          &mdash; not a confidence interval.
-        </p>
+        <div className="mt-1.5 flex items-center gap-1.5 text-[10.5px] leading-snug text-prism-muted-2">
+          <span>
+            {(interval.level * 100).toFixed(0)}% uncertainty:{" "}
+            {(interval.low * 100).toFixed(1)}%&ndash;
+            {(interval.high * 100).toFixed(1)}%
+            {!interval.calibrated && " (uncalibrated)"}
+          </span>
+          <span
+            className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+              interval.tier === "narrow"
+                ? "bg-prism-mint/10 text-prism-seafoam"
+                : interval.tier === "medium"
+                  ? "bg-prism-amber/10 text-prism-amber"
+                  : "bg-prism-red/10 text-prism-red"
+            }`}
+          >
+            {interval.tier}
+          </span>
+          <button
+            onClick={() => setShowMethodology((s) => !s)}
+            className="ml-auto text-prism-muted transition-colors hover:text-prism-teal"
+            aria-label="Toggle uncertainty methodology"
+          >
+            <Info className="size-3" />
+          </button>
+        </div>
+        {showMethodology && (
+          <p className="mt-1.5 rounded-lg bg-prism-card px-2.5 py-2 text-[10px] leading-snug text-prism-muted">
+            {interval.calibrated ? METHODOLOGY_TEXT : UNCALIBRATED_TEXT}
+          </p>
+        )}
       </div>
 
       <div className="my-4 h-px bg-prism-border" />
@@ -156,7 +187,7 @@ export function ResultPanel({
       <button
         onClick={() =>
           onShowReport(
-            buildPatientReportHTML(form, result, recs, band, patientId),
+            buildPatientReportHTML(form, result, recs, interval, patientId),
           )
         }
         className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-prism-teal py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-prism-dark"

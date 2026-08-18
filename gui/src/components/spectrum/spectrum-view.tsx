@@ -3,6 +3,8 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
+  ErrorBar,
   LabelList,
   Rectangle,
   ReferenceLine,
@@ -19,6 +21,8 @@ import {
   overlapData,
   shapTop,
   thresholdData,
+  uncertaintyCalibration,
+  uncertaintyDistribution,
 } from "../../data/spectrum-data";
 import { buildDashboardReportHTML } from "../../engine/report-builder";
 import { ChartCard } from "./chart-card";
@@ -106,6 +110,12 @@ export function DashboardContent({ onShowReport }: DashboardContentProps) {
                   formatter={(v: any) => Number(v).toFixed(3)}
                   style={{ fontSize: 11, fill: TEXT, fontWeight: 600 }}
                 />
+                <ErrorBar
+                  dataKey="sd"
+                  width={4}
+                  strokeWidth={1.5}
+                  stroke={MUTED}
+                />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -165,6 +175,78 @@ export function DashboardContent({ onShowReport }: DashboardContentProps) {
         <ListCard
           title="Significant Clinical Associations"
           rows={bivariate.map((b) => ({ label: b.label, value: b.p }))}
+        />
+      </div>
+
+      <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+        <ChartCard
+          title="Prediction Uncertainty Distribution"
+          footnote="95% interval widths across the holdout cohort. Populated by running Python script 09."
+        >
+          {uncertaintyDistribution.length > 0 ? (
+            <ResponsiveContainer width="100%" height={230}>
+              <BarChart
+                data={uncertaintyDistribution}
+                margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#e0e8e8"
+                  vertical={false}
+                />
+                <XAxis dataKey="bin" tick={{ fontSize: 10, fill: MUTED }} />
+                <YAxis tick={{ fontSize: 11, fill: MUTED }} />
+                <Tooltip />
+                <Bar dataKey="count" fill={TEAL} radius={[6, 6, 0, 0]}>
+                  {uncertaintyDistribution.map(
+                    (_: { bin: string; count: number }, i: number) => (
+                      <Cell
+                        key={i}
+                        fill={i < 2 ? MINT : i < 4 ? "#d98c2b" : RED}
+                      />
+                    ),
+                  )}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-57.5 items-center justify-center text-center text-xs text-prism-muted-2">
+              Run script 09_uncertainty_calibration.py to populate.
+            </div>
+          )}
+        </ChartCard>
+
+        <ListCard
+          title="Uncertainty Calibration"
+          rows={[
+            { label: "Method", value: uncertaintyCalibration.method },
+            {
+              label: "Calibration scalar (\u03bb)",
+              value:
+                uncertaintyCalibration.lambda !== null
+                  ? uncertaintyCalibration.lambda.toFixed(4)
+                  : "\u2014 (run script 09)",
+            },
+            {
+              label: "R\u00b2 (sqrt scale)",
+              value:
+                uncertaintyCalibration.rSquared !== null
+                  ? uncertaintyCalibration.rSquared.toFixed(3)
+                  : "\u2014",
+            },
+            {
+              label: "Empirical coverage",
+              value:
+                uncertaintyCalibration.coverage !== null
+                  ? `${(uncertaintyCalibration.coverage * 100).toFixed(0)}%`
+                  : "\u2014",
+            },
+            {
+              label: "Trees used for variance",
+              value: String(uncertaintyCalibration.nTrees),
+            },
+            { label: "CV folds", value: String(uncertaintyCalibration.nFolds) },
+          ]}
         />
       </div>
     </>

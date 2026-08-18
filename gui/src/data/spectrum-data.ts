@@ -35,3 +35,21 @@ export const bivariate = [
   { label: "Creatinine", p: "p = 0.049" },
   { label: "BUN", p: "p = 0.012" },
 ];
+
+// Uncertainty calibration metadata. These values are populated by running
+// Python script 09_uncertainty_calibration.py, which exports
+// uncertainty_calibration.json. Until then, the GUI runs in uncalibrated mode.
+export const uncertaintyCalibration = {
+  lambda: null as number | null,
+  rSquared: null as number | null,
+  coverage: null as number | null,
+  nPatients: 98,
+  nFolds: 5,
+  nTrees: 200,
+  method: "ijknife_cv_calibrated",
+  calibrated: false,
+};
+
+// Distribution of 95% interval widths across the holdout cohort.
+// Populated by script 09; empty until then.
+export const uncertaintyDistribution: { bin: string; count: number }[] = [];
