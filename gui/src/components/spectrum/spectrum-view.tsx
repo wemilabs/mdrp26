@@ -21,15 +21,12 @@ import {
   thresholdData,
 } from "../../data/spectrum-data";
 import { buildDashboardReportHTML } from "../../engine/report-builder";
-import { SectionIntro } from "../section-intro";
 import { ChartCard } from "./chart-card";
 import { ListCard } from "./list-card";
-import { StatRow } from "./stat-row";
 
 const TEAL = "#028090";
 const SEAFOAM = "#00a896";
 const MINT = "#02c39a";
-const DARK = "#0f3a3c";
 const RED = "#c4432b";
 const MUTED = "#5b7472";
 const TEXT = "#1f3436";
@@ -39,18 +36,14 @@ function holdoutBar({ index, ...rectProps }: Omit<BarShapeProps, "value">) {
   return <Rectangle {...rectProps} fill={fill} />;
 }
 
-interface DashboardViewProps {
+interface DashboardContentProps {
   onShowReport: (html: string) => void;
 }
 
-export function DashboardView({ onShowReport }: DashboardViewProps) {
+export function DashboardContent({ onShowReport }: DashboardContentProps) {
   return (
-    <div>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <SectionIntro
-          title="Model Performance Overview"
-          body="Benchmark performance and explainability metrics from PRISM's underlying model suite, evaluated on a validated 98-patient ICU cohort."
-        />
+    <>
+      <div className="mt-6 flex justify-end">
         <button
           onClick={() => onShowReport(buildDashboardReportHTML())}
           className="flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-prism-teal/40 bg-prism-card px-3.5 py-2 text-xs font-semibold text-prism-teal transition-colors hover:bg-prism-teal hover:text-white"
@@ -58,10 +51,6 @@ export function DashboardView({ onShowReport }: DashboardViewProps) {
           <FileBarChart className="h-3.5 w-3.5" />
           View / Print Performance Report
         </button>
-      </div>
-
-      <div className="mt-5">
-        <StatRow />
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -178,16 +167,6 @@ export function DashboardView({ onShowReport }: DashboardViewProps) {
           rows={bivariate.map((b) => ({ label: b.label, value: b.p }))}
         />
       </div>
-
-      <div className="mt-6 h-px w-full bg-prism-border" />
-      <p className="mt-5 flex items-center gap-2 text-xs text-prism-muted-2">
-        <span
-          className="h-2 w-2 rounded-full"
-          style={{ backgroundColor: DARK }}
-        />
-        Metrics above reflect a validated demonstration cohort and are intended
-        to illustrate model behavior, not certify clinical-grade performance.
-      </p>
-    </div>
+    </>
   );
 }

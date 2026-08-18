@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, FileText, Save } from "lucide-react";
 import { useState } from "react";
 import { getRecommendations, riskTier } from "../../engine/advice-engine";
@@ -8,7 +9,7 @@ import { FactorBars } from "./factor-bars";
 import { WaterfallChart } from "./waterfall-chart";
 
 interface ResultPanelProps {
-  result: PredictionResult | null;
+  result: PredictionResult;
   form: PatientFormValues;
   patientId: string;
   onShowReport: (html: string) => void;
@@ -27,18 +28,7 @@ export function ResultPanel({
   const [viewMode, setViewMode] = useState<FactorViewMode>("bars");
   const [labelDraft, setLabelDraft] = useState<string | null>(null);
 
-  if (!result) {
-    return (
-      <div className="rounded-2xl border border-prism-border bg-white p-8 text-center shadow-sm">
-        <p className="text-sm text-prism-muted">
-          Enter patient data and select{" "}
-          <strong className="text-prism-text">Calculate Risk</strong> to
-          generate a prediction and explanation.
-        </p>
-      </div>
-    );
-  }
-
+  // React Compiler auto-memoizes these derived values.
   const tier = riskTier(result.probability);
   const top = result.ranked.slice(0, 6);
   const recs = getRecommendations(result.probability, result.ranked);
@@ -66,6 +56,17 @@ export function ResultPanel({
         >
           {tier.label} risk
         </span>
+        <Badge
+          variant="ghost"
+          className="ml-auto gap-1.5 bg-prism-mint/10 text-prism-seafoam"
+          aria-label="Live prediction"
+        >
+          <span className="relative flex size-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-prism-mint opacity-75" />
+            <span className="relative inline-flex size-2 rounded-full bg-prism-mint" />
+          </span>
+          Live
+        </Badge>
       </div>
 
       <div className="mt-3">

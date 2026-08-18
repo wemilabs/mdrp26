@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { lazy, Suspense, useState } from "react";
+import { useState } from "react";
 import {
   Link,
   Navigate,
@@ -8,57 +8,36 @@ import {
   Routes,
   useSearchParams,
 } from "react-router";
+import { BatchShell } from "./components/batch/batch-shell";
+import { ErrorBoundary } from "./components/error-boundary";
+import { CalculatorShell } from "./components/refract/refract-shell";
 import { ReportModal } from "./components/report-modal";
+import { DashboardShell } from "./components/spectrum/spectrum-shell";
 import { TopBar } from "./components/top-bar";
 import { EXAMPLE_PATIENTS } from "./data/examples";
-import { predict } from "./engine/predict-engine";
 import { paramsToForm } from "./engine/share";
-import type { PatientFormValues, PredictionResult } from "./types";
-
-const CalculatorView = lazy(() =>
-  import("./components/refract/refract-view").then((m) => ({
-    default: m.CalculatorView,
-  })),
-);
-const DashboardView = lazy(() =>
-  import("./components/spectrum/spectrum-view").then((m) => ({
-    default: m.DashboardView,
-  })),
-);
-const BatchView = lazy(() =>
-  import("./components/batch/batch-view").then((m) => ({
-    default: m.BatchView,
-  })),
-);
+import type { PatientFormValues } from "./types";
 
 export default function App() {
   const [searchParams] = useSearchParams();
   const [form, setForm] = useState<PatientFormValues>(
     () => paramsToForm(searchParams) ?? EXAMPLE_PATIENTS.lowRisk.values,
   );
-  const [result, setResult] = useState<PredictionResult | null>(null);
   const [reportHtml, setReportHtml] = useState<string | null>(null);
   const [patientId, setPatientId] = useState<string>("");
 
   const handleExample = (key: string) => {
     setForm(EXAMPLE_PATIENTS[key].values);
     setPatientId("");
-    setResult(null);
   };
 
   const handleChange = (key: string, value: string) => {
     setForm((f) => ({ ...f, [key]: value }));
-    setResult(null);
-  };
-
-  const handleCalculate = () => {
-    setResult(predict(form));
   };
 
   const handleLoadForm = (values: PatientFormValues, id?: string) => {
     setForm(values);
     setPatientId(id ?? "");
-    setResult(null);
   };
 
   return (
@@ -69,12 +48,10 @@ export default function App() {
           <Route
             path="refract"
             element={
-              <CalculatorView
+              <CalculatorShell
                 form={form}
-                result={result}
                 patientId={patientId}
                 onChange={handleChange}
-                onCalculate={handleCalculate}
                 onExample={handleExample}
                 onShowReport={setReportHtml}
                 onLoadForm={handleLoadForm}
@@ -84,9 +61,9 @@ export default function App() {
           />
           <Route
             path="spectrum"
-            element={<DashboardView onShowReport={setReportHtml} />}
+            element={<DashboardShell onShowReport={setReportHtml} />}
           />
-          <Route path="batch" element={<BatchView />} />
+          <Route path="batch" element={<BatchShell />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -125,9 +102,23 @@ function Landing() {
             to="/refract"
             className="mt-8 inline-flex items-center gap-2 rounded-xl bg-prism-dark px-7 py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-prism-dark-light"
           >
-            Open the Risk Calculator
+            Open the Risk Assessment
             <ArrowRight className="size-4" />
           </Link>
+          <div className="mt-4 flex gap-5 text-sm font-medium text-prism-muted">
+            <Link
+              to="/spectrum"
+              className="underline-offset-4 transition-colors hover:text-prism-teal hover:underline"
+            >
+              Model performance
+            </Link>
+            <Link
+              to="/batch"
+              className="underline-offset-4 transition-colors hover:text-prism-teal hover:underline"
+            >
+              Batch scoring
+            </Link>
+          </div>
         </div>
       </div>
     </section>
@@ -139,9 +130,9 @@ function Shell() {
     <div className="min-h-screen bg-prism-bg text-prism-text">
       <TopBar />
       <main className="mx-auto max-w-6xl px-6 py-8">
-        <Suspense fallback={null}>
+        <ErrorBoundary>
           <Outlet />
-        </Suspense>
+        </ErrorBoundary>
       </main>
     </div>
   );

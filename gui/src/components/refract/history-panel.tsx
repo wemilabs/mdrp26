@@ -1,6 +1,15 @@
-import { ChevronDown, ChevronUp, History, Trash2, Upload } from "lucide-react";
-import { useState } from "react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Download,
+  FileUp,
+  History,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import { useRef, useState } from "react";
 import { riskTier } from "../../engine/advice-engine";
+import { exportHistory, importHistory } from "../../engine/history-store";
 import type { SavedAssessment } from "../../types";
 import { ComparisonView } from "./comparison-view";
 
@@ -8,6 +17,7 @@ interface HistoryPanelProps {
   history: SavedAssessment[];
   onLoad: (entry: SavedAssessment) => void;
   onDelete: (id: string) => void;
+  onReplaceHistory: (history: SavedAssessment[]) => void;
 }
 
 function relativeTime(ts: number): string {
@@ -21,9 +31,16 @@ function relativeTime(ts: number): string {
   return new Date(ts).toLocaleDateString();
 }
 
-export function HistoryPanel({ history, onLoad, onDelete }: HistoryPanelProps) {
+export function HistoryPanel({
+  history,
+  onLoad,
+  onDelete,
+  onReplaceHistory,
+}: HistoryPanelProps) {
   const [open, setOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [importError, setImportError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const selected = history.filter((e) => selectedIds.includes(e.id));
 
@@ -31,6 +48,21 @@ export function HistoryPanel({ history, onLoad, onDelete }: HistoryPanelProps) {
     setSelectedIds((ids) =>
       ids.includes(id) ? ids.filter((i) => i !== id) : [...ids, id].slice(-2),
     );
+  };
+
+  const handleImportFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const merged = importHistory(String(reader.result));
+        onReplaceHistory(merged);
+        setImportError(null);
+      } catch (err) {
+        setImportError(err instanceof Error ? err.message : "Import failed.");
+      }
+    };
+    reader.onerror = () => setImportError("Could not read the file.");
+    reader.readAsText(file);
   };
 
   return (
@@ -47,9 +79,9 @@ export function HistoryPanel({ history, onLoad, onDelete }: HistoryPanelProps) {
           </span>
         </span>
         {open ? (
-          <ChevronUp className="size-4 text-prism-muted" />
+          <ChevronUp className="h-4 w-4 text-prism-muted" />
         ) : (
-          <ChevronDown className="size-4 text-prism-muted" />
+          <ChevronDown className="h-4 w-4 text-prism-muted" />
         )}
       </button>
 
@@ -57,9 +89,9 @@ export function HistoryPanel({ history, onLoad, onDelete }: HistoryPanelProps) {
         <>
           {history.length === 0 ? (
             <p className="mt-3 text-xs text-prism-muted">
-              No saved assessments yet. Calculate a risk estimate, then use{" "}
+              No saved assessments yet. Use{" "}
               <strong className="text-prism-text">Save assessment</strong> to
-              keep it here for later comparison.
+              keep one here for later comparison.
             </p>
           ) : (
             <>
@@ -103,6 +135,7 @@ export function HistoryPanel({ history, onLoad, onDelete }: HistoryPanelProps) {
                       <button
                         onClick={() => onLoad(entry)}
                         title="Load into form"
+                        aria-label={`Load ${entry.patientId || entry.label} into form`}
                         className="rounded-md p-1.5 text-prism-teal transition-colors hover:bg-prism-card"
                       >
                         <Upload className="size-3.5" />
@@ -110,6 +143,7 @@ export function HistoryPanel({ history, onLoad, onDelete }: HistoryPanelProps) {
                       <button
                         onClick={() => onDelete(entry.id)}
                         title="Delete"
+                        aria-label={`Delete ${entry.patientId || entry.label}`}
                         className="rounded-md p-1.5 text-prism-muted transition-colors hover:bg-prism-card hover:text-prism-red"
                       >
                         <Trash2 className="size-3.5" />
@@ -123,6 +157,37 @@ export function HistoryPanel({ history, onLoad, onDelete }: HistoryPanelProps) {
               )}
             </>
           )}
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              onClick={exportHistory}
+              disabled={history.length === 0}
+              className="flex items-center gap-1.5 rounded-lg border border-prism-teal/40 px-3 py-1.5 text-xs font-semibold text-prism-teal transition-colors hover:bg-prism-teal hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Download className="size-3" />
+              Export
+            </button>
+            <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-prism-muted-2/40 px-3 py-1.5 text-xs font-semibold text-prism-muted transition-colors hover:bg-prism-card">
+              <FileUp className="size-3" />
+              Import
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImportFile(file);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+            {importError && (
+              <span className="text-[10.5px] font-semibold text-prism-red">
+                {importError}
+              </span>
+            )}
+          </div>
         </>
       )}
     </div>

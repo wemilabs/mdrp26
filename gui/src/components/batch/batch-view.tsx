@@ -1,15 +1,17 @@
-import { AlertTriangle, Download, FileUp } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, Download, FileUp } from "lucide-react";
 import Papa from "papaparse";
 import { useState } from "react";
+import { Link } from "react-router";
 import { EXAMPLE_PATIENTS } from "../../data/examples";
 import { FIELD_GROUPS } from "../../data/fields";
 import { riskTier } from "../../engine/advice-engine";
 import { predict } from "../../engine/predict-engine";
+import { formToParams } from "../../engine/share";
 import { formIssues } from "../../engine/validation";
 import type { PatientFormValues, RiskTier } from "../../types";
-import { SectionIntro } from "../section-intro";
+import { BatchSummary } from "./batch-summary";
 
-interface BatchRow {
+export interface BatchRow {
   index: number;
   form: PatientFormValues;
   probability: number;
@@ -46,7 +48,7 @@ function scoreRows(records: Record<string, string>[]): BatchRow[] {
   });
 }
 
-export function BatchView() {
+export function BatchContent() {
   const [rows, setRows] = useState<BatchRow[] | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -97,12 +99,7 @@ export function BatchView() {
   };
 
   return (
-    <div>
-      <SectionIntro
-        title="Batch Risk Scoring"
-        body="Score multiple patients at once from a CSV file. Each row is run through the same model as the calculator, entirely in your browser. No data leaves this device."
-      />
-
+    <>
       <div className="mb-6 mt-5 flex flex-wrap items-center gap-2.5">
         <button
           onClick={handleTemplate}
@@ -138,91 +135,102 @@ export function BatchView() {
       )}
 
       {rows && (
-        <div className="rounded-2xl border border-prism-border bg-white p-5 shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-xs font-bold text-prism-text">
-              {rows.length} patient{rows.length === 1 ? "" : "s"} scored
-            </span>
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-1.5 rounded-lg border border-prism-teal/40 px-3 py-1.5 text-xs font-semibold text-prism-teal transition-colors hover:bg-prism-teal hover:text-white"
-            >
-              <Download className="size-3" />
-              Export results CSV
-            </button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-prism-border text-[10.5px] uppercase tracking-wide text-prism-teal">
-                  <th className="px-2 py-2">#</th>
-                  <th className="px-2 py-2">Age</th>
-                  <th className="px-2 py-2">Gender</th>
-                  <th className="px-2 py-2">Admission</th>
-                  <th className="px-2 py-2">Risk</th>
-                  <th className="px-2 py-2">Tier</th>
-                  <th className="px-2 py-2">Top factors</th>
-                  <th className="px-2 py-2" />
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr
-                    key={row.index}
-                    className="border-b border-prism-border/60"
-                  >
-                    <td className="px-2 py-2 text-prism-muted">{row.index}</td>
-                    <td className="px-2 py-2">{row.form.age}</td>
-                    <td className="px-2 py-2">{row.form.gender}</td>
-                    <td className="px-2 py-2">{row.form.admission_type}</td>
-                    <td
-                      className="px-2 py-2 font-semibold"
-                      style={{ color: row.tier.colorVar }}
-                    >
-                      {(row.probability * 100).toFixed(1)}%
-                    </td>
-                    <td className="px-2 py-2">
-                      <span
-                        className="rounded-full px-2 py-0.5 text-[10.5px] font-bold"
-                        style={{
-                          backgroundColor: `color-mix(in srgb, ${row.tier.colorVar} 15%, white)`,
-                          color: row.tier.colorVar,
-                        }}
-                      >
-                        {row.tier.label}
-                      </span>
-                    </td>
-                    <td className="px-2 py-2 text-prism-muted">
-                      {row.topFactors.join(", ")}
-                    </td>
-                    <td className="px-2 py-2">
-                      {row.issues.length > 0 && (
-                        <span
-                          title={`Implausible values: ${row.issues.join(", ")}`}
-                        >
-                          <AlertTriangle className="size-3.5 text-prism-amber" />
-                        </span>
-                      )}
-                    </td>
+        <div className="space-y-5">
+          <BatchSummary rows={rows} />
+
+          <div className="rounded-2xl border border-prism-border bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-xs font-bold text-prism-text">
+                {rows.length} patient{rows.length === 1 ? "" : "s"} scored
+              </span>
+              <button
+                onClick={handleExport}
+                className="flex items-center gap-1.5 rounded-lg border border-prism-teal/40 px-3 py-1.5 text-xs font-semibold text-prism-teal transition-colors hover:bg-prism-teal hover:text-white"
+              >
+                <Download className="size-3" />
+                Export results CSV
+              </button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-prism-border text-[10.5px] uppercase tracking-wide text-prism-teal">
+                    <th className="px-2 py-2">#</th>
+                    <th className="px-2 py-2">Age</th>
+                    <th className="px-2 py-2">Gender</th>
+                    <th className="px-2 py-2">Admission</th>
+                    <th className="px-2 py-2">Risk</th>
+                    <th className="px-2 py-2">Tier</th>
+                    <th className="px-2 py-2">Top factors</th>
+                    <th className="px-2 py-2" />
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr
+                      key={row.index}
+                      className="border-b border-prism-border/60 transition-colors hover:bg-prism-card/50"
+                    >
+                      <td className="px-2 py-2 text-prism-muted">
+                        {row.index}
+                      </td>
+                      <td className="px-2 py-2">{row.form.age}</td>
+                      <td className="px-2 py-2">{row.form.gender}</td>
+                      <td className="px-2 py-2">{row.form.admission_type}</td>
+                      <td
+                        className="px-2 py-2 font-semibold"
+                        style={{ color: row.tier.colorVar }}
+                      >
+                        {(row.probability * 100).toFixed(1)}%
+                      </td>
+                      <td className="px-2 py-2">
+                        <span
+                          className="rounded-full px-2 py-0.5 text-[10.5px] font-bold"
+                          style={{
+                            backgroundColor: `color-mix(in srgb, ${row.tier.colorVar} 15%, white)`,
+                            color: row.tier.colorVar,
+                          }}
+                        >
+                          {row.tier.label}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-prism-muted">
+                        {row.topFactors.join(", ")}
+                      </td>
+                      <td className="px-2 py-2">
+                        <div className="flex items-center gap-1.5">
+                          {row.issues.length > 0 && (
+                            <span
+                              title={`Implausible values: ${row.issues.join(", ")}`}
+                              aria-label={`Row ${row.index} has implausible values`}
+                            >
+                              <AlertTriangle className="size-3.5 text-prism-amber" />
+                            </span>
+                          )}
+                          <Link
+                            to={`/refract?${formToParams(row.form)}`}
+                            title="Open in calculator"
+                            aria-label={`Open row ${row.index} in calculator`}
+                            className="rounded-md p-1 text-prism-teal transition-colors hover:bg-prism-card"
+                          >
+                            <ArrowUpRight className="size-3.5" />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3 text-[10.5px] leading-snug text-prism-muted-2">
+              Missing or invalid values fall back to training-set medians,
+              exactly as in the calculator. Rows flagged with a warning contain
+              physiologically implausible values. Click the arrow icon to open a
+              row in the calculator.
+            </p>
           </div>
-          <p className="mt-3 text-[10.5px] leading-snug text-prism-muted-2">
-            Missing or invalid values fall back to training-set medians, exactly
-            as in the calculator. Rows flagged with a warning contain
-            physiologically implausible values. Review them before interpreting
-            results.
-          </p>
         </div>
       )}
-
-      <p className="mt-7 max-w-3xl text-xs leading-relaxed text-prism-muted-2">
-        Educational output only, not clinical advice. PRISM is a research and
-        demonstration tool and is not validated for clinical use or real patient
-        decision-making.
-      </p>
-    </div>
+    </>
   );
 }

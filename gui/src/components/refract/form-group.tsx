@@ -72,9 +72,13 @@ export function FormGroup({ group, form, onChange }: FormGroupProps) {
       <div className="grid grid-cols-2 gap-3.5">
         {group.fields.map((f) => {
           const status = fieldStatus(f, form[f.key]);
+          const fieldId = `field-${f.key}`;
           return (
             <div key={f.key}>
-              <label className="mb-1 block text-xs font-medium text-prism-muted">
+              <label
+                htmlFor={fieldId}
+                className="mb-1 block text-xs font-medium text-prism-muted"
+              >
                 {f.label}{" "}
                 {f.unit ? (
                   <span className="text-prism-muted-2">({f.unit})</span>
@@ -82,6 +86,7 @@ export function FormGroup({ group, form, onChange }: FormGroupProps) {
               </label>
               {f.type === "select" ? (
                 <select
+                  id={fieldId}
                   value={form[f.key] as string}
                   onChange={(e) => onChange(f.key, e.target.value)}
                   className="w-full rounded-lg border border-prism-border bg-white px-3 py-2 text-sm text-prism-text outline-none transition-shadow focus:border-prism-teal focus:ring-2 focus:ring-prism-teal/20"
@@ -94,6 +99,7 @@ export function FormGroup({ group, form, onChange }: FormGroupProps) {
                 </select>
               ) : (
                 <input
+                  id={fieldId}
                   type="number"
                   value={form[f.key] as number}
                   onChange={(e) => onChange(f.key, e.target.value)}
