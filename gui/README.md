@@ -15,7 +15,7 @@ npm run preview  # preview the production build locally
 
 ## Project structure
 
-```
+```text
 src/
   components/
     calculator/     CalculatorView, FormGroup, ResultPanel
