@@ -10,7 +10,7 @@ export function BatchShell() {
   return (
     <div>
       <SectionIntro
-        title="Batch Risk Scoring"
+        title="Batch risk scoring"
         body="Score multiple patients at once from a CSV file. Each row is run through the same model as the calculator, entirely in your browser. No data leaves this device."
       />
 

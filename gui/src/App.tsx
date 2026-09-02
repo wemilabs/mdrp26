@@ -1,12 +1,12 @@
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 import {
-  Link,
-  Navigate,
-  Outlet,
-  Route,
-  Routes,
-  useSearchParams,
+    Link,
+    Navigate,
+    Outlet,
+    Route,
+    Routes,
+    useSearchParams,
 } from "react-router";
 import { BatchShell } from "./components/batch/batch-shell";
 import { ErrorBoundary } from "./components/error-boundary";
@@ -98,9 +98,8 @@ function Landing() {
             PRISM
           </h1>
           <p className="mt-4 text-base leading-relaxed text-prism-text md:text-lg">
-            See patient risk clearly, before it becomes critical. Transparent
             ICU mortality risk estimates from first-24-hour vital signs and
-            laboratory values.
+            laboratory values, explained factor by factor.
           </p>
           <Link
             to="/refract"

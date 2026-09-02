@@ -89,8 +89,8 @@ export function ResultPanel({
         </div>
         <p className="mt-1.5 text-[10.5px] leading-snug text-prism-muted-2">
           Sensitivity: {(band.low * 100).toFixed(1)}%&ndash;
-          {(band.high * 100).toFixed(1)}% under &plusmn;5% input variation
-          &mdash; not a confidence interval.
+          {(band.high * 100).toFixed(1)}% under &plusmn;5% input variation.
+          Not a confidence interval.
         </p>
       </div>
 
@@ -122,8 +122,8 @@ export function ResultPanel({
         <WaterfallChart result={result} />
       )}
       <p className="mt-2 text-[10.5px] leading-snug text-prism-muted-2">
-        Contributions are estimated via tree path-decomposition, aggregated
-        across each clinical variable's recorded range.
+        Tree path-decomposition estimates contributions, aggregated across
+        each clinical variable's recorded range.
       </p>
 
       <div className="my-4 h-px bg-prism-border" />
@@ -141,7 +141,6 @@ export function ResultPanel({
               key={it.factor}
               className="list-disc text-xs leading-snug text-prism-muted marker:text-prism-teal"
             >
-              <strong className="text-prism-text">{it.factor}:</strong>{" "}
               {it.advice}
             </li>
           ))}
@@ -149,7 +148,7 @@ export function ResultPanel({
       )}
       <div className="mt-2 flex items-start gap-1.5 text-[10.5px] font-semibold leading-snug text-prism-red">
         <AlertTriangle className="mt-0.5 size-3 shrink-0" />
-        Educational output only — not clinical advice. Care decisions must be
+        Educational output only, not clinical advice. Care decisions must be
         made by qualified clinicians.
       </div>
 

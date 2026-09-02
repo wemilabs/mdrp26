@@ -15,7 +15,7 @@ export function DashboardShell({ onShowReport }: DashboardShellProps) {
   return (
     <div>
       <SectionIntro
-        title="Model Performance Overview"
+        title="Model performance overview"
         body="Benchmark performance and explainability metrics from PRISM's underlying model suite, evaluated on a validated 98-patient ICU cohort."
       />
 
