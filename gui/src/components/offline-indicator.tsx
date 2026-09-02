@@ -30,7 +30,7 @@ export function OfflineIndicator() {
       className="flex items-center justify-center gap-2 bg-prism-amber/15 px-4 py-1.5 text-xs font-medium text-prism-amber"
     >
       <WifiOff className="size-3.5" />
-      You are offline — cached data is being used
+      You are offline. Cached data is being used.
     </div>
   );
 }

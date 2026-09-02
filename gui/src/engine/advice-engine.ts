@@ -8,7 +8,7 @@ export function riskTier(probability: number): RiskTier {
 }
 
 const TIER_SUMMARY: Record<string, string> = {
-  Low: "Consistent with routine monitoring. No additional escalation is suggested by these inputs alone.",
+  Low: "Consistent with routine monitoring. These inputs alone don't suggest additional escalation.",
   Moderate:
     "A moderately elevated watch level. Consider increasing monitoring frequency and reassessing trends over the next observation window.",
   Elevated:
@@ -17,26 +17,26 @@ const TIER_SUMMARY: Record<string, string> = {
 };
 
 const FACTOR_ADVICE: Record<string, string> = {
-  Age: "Advanced age is a non-modifiable risk factor \u2014 ensure age-appropriate care planning and goals-of-care discussion are up to date.",
+  Age: "Advanced age is non-modifiable. Keep age-appropriate care planning and goals-of-care discussion current.",
   "Comorbidity count": "High comorbidity burden may benefit from multidisciplinary or specialist input to address competing conditions.",
-  Creatinine: "Elevated renal markers may warrant further renal function assessment (e.g., nephrology input, medication dose review).",
-  BUN: "Elevated BUN may warrant further renal function assessment and review of hydration and medication status.",
-  Lactate: "Elevated lactate can indicate tissue hypoperfusion \u2014 consider assessment for sepsis or shock states.",
-  WBC: "Elevated white cell count may indicate an active infectious or inflammatory process warranting further workup.",
-  "Heart rate": "Abnormal heart rate suggests reviewing hemodynamic status and cardiovascular monitoring.",
-  "Systolic BP": "Abnormal systolic blood pressure suggests reviewing hemodynamic status and perfusion.",
-  "Diastolic BP": "Abnormal diastolic blood pressure suggests reviewing hemodynamic status and perfusion.",
-  "Respiratory rate": "Abnormal respiratory rate suggests reassessing respiratory support needs.",
-  "SpO\u2082": "Reduced oxygen saturation suggests reassessing respiratory support and oxygenation status.",
+  Creatinine: "Elevated renal markers may signal impaired renal function. Consider nephrology input and medication dose review.",
+  BUN: "Elevated BUN may signal impaired renal function. Review hydration and medication status.",
+  Lactate: "Elevated lactate can indicate tissue hypoperfusion. Assess for sepsis or shock states.",
+  WBC: "Elevated white cell count may signal an active infectious or inflammatory process. Consider further workup.",
+  "Heart rate": "Abnormal heart rate. Review hemodynamic status and cardiovascular monitoring.",
+  "Systolic BP": "Abnormal systolic blood pressure. Review hemodynamic status and perfusion.",
+  "Diastolic BP": "Abnormal diastolic blood pressure. Review hemodynamic status and perfusion.",
+  "Respiratory rate": "Abnormal respiratory rate. Reassess respiratory support needs.",
+  "SpO\u2082": "Reduced oxygen saturation. Reassess respiratory support and oxygenation status.",
   Platelets: "Abnormal platelet count may warrant hematology review or a bleeding and clotting risk assessment.",
-  Sodium: "Electrolyte disturbance noted \u2014 consider correction per protocol and recheck.",
-  Potassium: "Electrolyte disturbance noted \u2014 consider correction per protocol and recheck, particularly given cardiac risk.",
-  Bicarbonate: "Acid-base disturbance noted \u2014 consider blood gas review and correction per protocol.",
+  Sodium: "Electrolyte disturbance noted. Correct per protocol and recheck.",
+  Potassium: "Electrolyte disturbance noted. Correct per protocol and recheck, given cardiac risk.",
+  Bicarbonate: "Acid-base disturbance noted. Review blood gas and correct per protocol.",
   "ICU length of stay":
-    "Prolonged ICU stay is associated with cumulative risk \u2014 consider reassessing for complications of prolonged critical illness.",
-  Temperature: "Abnormal temperature may indicate infection or a systemic inflammatory response \u2014 correlate clinically.",
-  Glucose: "Glycemic derangement noted \u2014 consider glucose control per protocol.",
-  Hemoglobin: "Low hemoglobin may indicate anemia contributing to reduced oxygen delivery \u2014 consider transfusion threshold review.",
+    "Prolonged ICU stay is associated with cumulative risk. Reassess for complications of prolonged critical illness.",
+  Temperature: "Abnormal temperature may indicate infection or systemic inflammatory response. Correlate clinically.",
+  Glucose: "Glycemic derangement noted. Manage glucose per protocol.",
+  Hemoglobin: "Low hemoglobin may indicate anemia contributing to reduced oxygen delivery. Review transfusion threshold.",
 };
 
 /**

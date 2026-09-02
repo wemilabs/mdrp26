@@ -1,13 +1,13 @@
 import {
-  cohortPercentile,
-  cohortZ,
-  fieldStatus,
-  type FieldStatus,
+    cohortPercentile,
+    cohortZ,
+    fieldStatus,
+    type FieldStatus,
 } from "../../engine/validation";
 import type {
-  FieldDefinition,
-  FieldGroup,
-  PatientFormValues,
+    FieldDefinition,
+    FieldGroup,
+    PatientFormValues,
 } from "../../types";
 
 interface FormGroupProps {
@@ -36,7 +36,7 @@ function FieldHint({
     return (
       <p className="mt-1 text-[10.5px] font-semibold text-prism-red">
         Outside plausible range ({field.plausibleRange?.[0]}&ndash;
-        {field.plausibleRange?.[1]}) &mdash; check the entry
+        {field.plausibleRange?.[1]}). Check the entry.
       </p>
     );
   }

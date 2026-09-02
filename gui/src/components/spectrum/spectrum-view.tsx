@@ -1,24 +1,24 @@
 import { FileBarChart } from "lucide-react";
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  LabelList,
-  Rectangle,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  type BarShapeProps,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    LabelList,
+    Rectangle,
+    ReferenceLine,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+    type BarShapeProps,
 } from "recharts";
 import {
-  bivariate,
-  cvAuroc,
-  holdoutAuroc,
-  overlapData,
-  shapTop,
-  thresholdData,
+    bivariate,
+    cvAuroc,
+    holdoutAuroc,
+    overlapData,
+    shapTop,
+    thresholdData,
 } from "../../data/spectrum-data";
 import { buildDashboardReportHTML } from "../../engine/report-builder";
 import { ChartCard } from "./chart-card";
@@ -54,7 +54,7 @@ export function DashboardContent({ onShowReport }: DashboardContentProps) {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-        <ChartCard title="Held-Out Test AUROC">
+        <ChartCard title="Held-out test AUROC">
           <ResponsiveContainer width="100%" height={230}>
             <BarChart
               data={holdoutAuroc}
@@ -82,7 +82,7 @@ export function DashboardContent({ onShowReport }: DashboardContentProps) {
         </ChartCard>
 
         <ChartCard
-          title="5-Fold Cross-Validated AUROC (mean)"
+          title="5-fold cross-validated AUROC (mean)"
           footnote="Wide fold-to-fold variance reflects the cohort's small size."
         >
           <ResponsiveContainer width="100%" height={230}>
@@ -111,7 +111,7 @@ export function DashboardContent({ onShowReport }: DashboardContentProps) {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Sensitivity: Default vs. Optimal Threshold">
+        <ChartCard title="Sensitivity: default vs. optimal threshold">
           <ResponsiveContainer width="100%" height={230}>
             <BarChart
               data={thresholdData}
@@ -131,7 +131,7 @@ export function DashboardContent({ onShowReport }: DashboardContentProps) {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Top-5 Contributing Features">
+        <ChartCard title="Top-5 contributing features">
           <ResponsiveContainer width="100%" height={230}>
             <BarChart
               data={shapTop}
@@ -159,11 +159,11 @@ export function DashboardContent({ onShowReport }: DashboardContentProps) {
 
       <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
         <ListCard
-          title="Cross-Method Explanation Agreement"
+          title="Cross-method explanation agreement"
           rows={overlapData.map((o) => ({ label: o.pair, value: o.frac }))}
         />
         <ListCard
-          title="Significant Clinical Associations"
+          title="Significant clinical associations"
           rows={bivariate.map((b) => ({ label: b.label, value: b.p }))}
         />
       </div>

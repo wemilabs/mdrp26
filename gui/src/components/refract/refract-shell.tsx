@@ -47,7 +47,7 @@ export function CalculatorShell({
   return (
     <div>
       <SectionIntro
-        title="Patient Risk Assessment"
+        title="Patient risk assessment"
         body="Enter a patient's vital signs and laboratory values to generate a real-time mortality risk estimate, with a transparent breakdown of the clinical factors driving the prediction."
       />
 
@@ -111,8 +111,8 @@ export function CalculatorShell({
         This estimate is produced by a gradient-boosted model trained on
         first-24-hour ICU vital signs and laboratory values. For simplicity,
         each value entered here is treated as constant across that window;
-        clinical deployments would typically draw on continuous monitoring
-        trends instead. Contributing factors are computed using a lightweight
+        clinical deployments would draw on continuous monitoring trends
+        instead. Contributing factors are computed using a lightweight
         approximation suited to real-time use. PRISM is intended for
         demonstration and research purposes and does not constitute clinical
         advice.
