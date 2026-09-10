@@ -1,16 +1,16 @@
 import {
-  Bar,
-  BarChart,
-  Rectangle,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  type BarShapeProps,
+    Bar,
+    BarChart,
+    Rectangle,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+    type BarShapeProps,
 } from "recharts";
 import {
-  buildWaterfallSteps,
-  type WaterfallStep,
+    buildWaterfallSteps,
+    type WaterfallStep,
 } from "../../engine/waterfall";
 import type { PredictionResult } from "../../types";
 
@@ -52,12 +52,12 @@ function WaterfallTooltip({
     <div className="rounded-lg border border-prism-border bg-white px-3 py-2 text-xs shadow-md">
       <div className="font-semibold text-prism-text">{row.name}</div>
       {row.kind === "anchor" ? (
-        <div className="text-prism-muted">{(row.to * 100).toFixed(1)}%</div>
+        <div className="font-mono tabular-nums text-prism-muted">{(row.to * 100).toFixed(1)}%</div>
       ) : (
         <div
-          className={
+          className={`font-mono tabular-nums ${
             row.kind === "up" ? "text-prism-red" : "text-prism-seafoam"
-          }
+          }`}
         >
           {deltaPts >= 0 ? "+" : ""}
           {deltaPts.toFixed(1)} pts &rarr; {(row.to * 100).toFixed(1)}%

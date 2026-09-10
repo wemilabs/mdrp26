@@ -178,7 +178,7 @@ export function BatchContent() {
                       <td className="px-2 py-2">{row.form.gender}</td>
                       <td className="px-2 py-2">{row.form.admission_type}</td>
                       <td
-                        className="px-2 py-2 font-semibold"
+                        className="px-2 py-2 font-mono font-semibold tabular-nums"
                         style={{ color: row.tier.colorVar }}
                       >
                         {(row.probability * 100).toFixed(1)}%

@@ -42,7 +42,7 @@ export function ResultPanel({
       </div>
       <div className="mt-1.5 flex items-baseline gap-3">
         <span
-          className="font-display text-[42px] font-bold"
+          className="font-mono text-[42px] font-semibold tabular-nums"
           style={{ color: tier.colorVar }}
         >
           {(result.probability * 100).toFixed(1)}%
@@ -87,7 +87,7 @@ export function ResultPanel({
             }}
           />
         </div>
-        <p className="mt-1.5 text-[10.5px] leading-snug text-prism-muted-2">
+        <p className="mt-1.5 text-[10.5px] leading-snug tabular-nums text-prism-muted-2">
           Sensitivity: {(band.low * 100).toFixed(1)}%&ndash;
           {(band.high * 100).toFixed(1)}% under &plusmn;5% input variation.
           Not a confidence interval.

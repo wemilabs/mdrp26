@@ -18,8 +18,9 @@
   --color-prism-red: #c4432b;
   --color-prism-amber: #d98c2b;
 
-  --font-display: "Source Serif 4", Georgia, Cambria, serif;
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Newsreader", Georgia, Cambria, "Times New Roman", serif;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", "Menlo", monospace;
 
   --animate-hero-fade: hero-fade 1.2s ease-out both;
 

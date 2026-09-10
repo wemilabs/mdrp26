@@ -42,27 +42,31 @@ function reportShell(
   bodyHtml: string,
 ): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(docTitle)}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
-    body{font-family: Georgia, 'Times New Roman', serif; color:#1F3436; background:#F5F9F9; margin:0; padding:40px;}
+    body{font-family: "IBM Plex Sans", system-ui, sans-serif; color:#1F3436; background:#F5F9F9; margin:0; padding:40px;}
     .header{background:#0F3A3C; color:#fff; padding:28px 32px; border-radius:12px;}
-    .kicker{font-family: system-ui, sans-serif; font-size:11px; letter-spacing:2px; color:#02C39A; font-weight:700;}
-    h1{font-size:26px; margin:6px 0 0;}
-    .meta{font-family: system-ui, sans-serif; font-size:12px; color:#CBE0DE; margin-top:8px;}
+    .kicker{font-family: "IBM Plex Sans", system-ui, sans-serif; font-size:11px; letter-spacing:2px; color:#02C39A; font-weight:700;}
+    h1{font-family: "Newsreader", Georgia, serif; font-size:30px; font-weight:600; margin:6px 0 0;}
+    .meta{font-family: "IBM Plex Sans", system-ui, sans-serif; font-size:12px; color:#CBE0DE; margin-top:8px;}
     .box{background:#fff; border:1px solid #DCEAE9; border-radius:12px; padding:24px; margin-top:20px;}
-    .risk-num{font-size:44px; font-weight:700;}
-    .tier{display:inline-block; font-family: system-ui, sans-serif; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; margin-left:12px;}
-    table{width:100%; border-collapse:collapse; margin-top:10px; font-family: system-ui, sans-serif; font-size:13px;}
+    .risk-num{font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; font-size:44px; font-weight:600;}
+    .tier{display:inline-block; font-family: "IBM Plex Sans", system-ui, sans-serif; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; margin-left:12px;}
+    table{width:100%; border-collapse:collapse; margin-top:10px; font-family: "IBM Plex Sans", system-ui, sans-serif; font-size:13px;}
     td,th{padding:8px 6px; border-bottom:1px solid #EEF4F3; text-align:left;}
     th{color:#028090; font-size:11.5px; text-transform:uppercase; letter-spacing:0.5px;}
     td:first-child{color:#5B7472;}
-    h2{font-family: system-ui, sans-serif; font-size:15px; color:#028090; margin:0 0 4px;}
-    .disclaimer{margin-top:22px; font-family: system-ui, sans-serif; font-size:11.5px; color:#5B7472; background:#EAF3F2; padding:14px 18px; border-radius:10px; line-height:1.5;}
-    .wf{margin-top:12px; font-family: system-ui, sans-serif;}
+    td:nth-child(2){font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums;}
+    h2{font-family: "Newsreader", Georgia, serif; font-size:17px; font-weight:600; color:#028090; margin:0 0 4px;}
+    .disclaimer{margin-top:22px; font-family: "IBM Plex Sans", system-ui, sans-serif; font-size:11.5px; color:#5B7472; background:#EAF3F2; padding:14px 18px; border-radius:10px; line-height:1.5;}
+    .wf{margin-top:12px; font-family: "IBM Plex Sans", system-ui, sans-serif;}
     .wf-row{display:flex; align-items:center; gap:10px; margin-bottom:6px;}
     .wf-label{width:140px; font-size:11.5px; color:#5B7472; text-align:right; flex-shrink:0;}
     .wf-track{flex:1; height:13px; background:#EEF4F3; border-radius:4px; position:relative;}
     .wf-bar{position:absolute; top:0; height:13px; border-radius:3px; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
-    .wf-val{width:130px; font-size:11px; font-weight:600; flex-shrink:0;}
+    .wf-val{width:130px; font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; font-size:11px; font-weight:500; flex-shrink:0;}
     @media print { body{background:#fff;} .box{border:none;} .wf-track{border:1px solid #EEF4F3;} }
   </style></head><body>
     <div class="header">
@@ -135,16 +139,16 @@ export function buildPatientReportHTML(
       <div class="kicker" style="color:#5B7472;">PREDICTED MORTALITY RISK</div>
       <span class="risk-num" style="color:${tier.colorVar}">${(result.probability * 100).toFixed(1)}%</span>
       <span class="tier" style="background:color-mix(in srgb, ${tier.colorVar} 15%, white); color:${tier.colorVar};">${tier.label} risk</span>
-      ${band ? `<p style="font-family: system-ui, sans-serif; font-size:12px; color:#5B7472; margin:8px 0 0;">Sensitivity: ${(band.low * 100).toFixed(1)}%&ndash;${(band.high * 100).toFixed(1)}% under &plusmn;5% input variation. Not a confidence interval.</p>` : ""}
+      ${band ? `<p style="font-size:12px; color:#5B7472; margin:8px 0 0;">Sensitivity: ${(band.low * 100).toFixed(1)}%&ndash;${(band.high * 100).toFixed(1)}% under &plusmn;5% input variation. Not a confidence interval.</p>` : ""}
       <h2 style="margin-top:22px;">Top contributing factors</h2>
       <table><thead><tr><th>Factor</th><th>Direction</th></tr></thead><tbody>${factorRows}</tbody></table>
       <h2 style="margin-top:22px;">How the estimate was built</h2>
       <div class="wf">${waterfallRows}</div>
-      <p style="font-family: system-ui, sans-serif; font-size:11px; color:#5B7472;">Starting from a typical cohort patient (median inputs), each factor shows how this patient differs. Steps are shown in probability space for readability; the model combines factors on the log-odds scale, so step sizes depend on their order (largest contributions first).</p>
+      <p style="font-size:11px; color:#5B7472;">Starting from a typical cohort patient (median inputs), each factor shows how this patient differs. Steps are shown in probability space for readability; the model combines factors on the log-odds scale, so step sizes depend on their order (largest contributions first).</p>
       <h2 style="margin-top:22px;">Suggested next steps</h2>
-      <p style="font-family: system-ui, sans-serif; font-size:13px; background:#EAF3F2; padding:12px 14px; border-radius:8px;">${escapeHtml(recs.summary)}</p>
-      ${recItems ? `<ul style="font-family: system-ui, sans-serif; font-size:12.5px; color:#5B7472; line-height:1.6;">${recItems}</ul>` : ""}
-      <p style="font-family: system-ui, sans-serif; font-size:11px; color:#C4432B; font-weight:700;">Educational output only, not clinical advice. All care decisions must be made by qualified clinicians using full clinical judgment and context.</p>
+      <p style="font-size:13px; background:#EAF3F2; padding:12px 14px; border-radius:8px;">${escapeHtml(recs.summary)}</p>
+      ${recItems ? `<ul style="font-size:12.5px; color:#5B7472; line-height:1.6;">${recItems}</ul>` : ""}
+      <p style="font-size:11px; color:#C4432B; font-weight:700;">Educational output only, not clinical advice. All care decisions must be made by qualified clinicians using full clinical judgment and context.</p>
       <h2 style="margin-top:22px;">Patient input values</h2>
       <table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>${inputRows}</tbody></table>
     </div>`;

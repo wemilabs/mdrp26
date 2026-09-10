@@ -32,7 +32,7 @@ export function BatchSummary({ rows }: BatchSummaryProps) {
           key={s.label}
           className="rounded-2xl bg-prism-dark px-4 py-4 shadow-sm"
         >
-          <div className="font-display text-[22px] font-bold text-prism-mint">
+          <div className="font-mono text-[22px] font-semibold tabular-nums text-prism-mint">
             {s.value}
           </div>
           <div className="mt-0.5 text-xs text-white/70">{s.label}</div>

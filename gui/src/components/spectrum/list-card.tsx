@@ -11,7 +11,7 @@ export function ListCard({ title, rows }: ListCardProps) {
         {rows.map((r) => (
           <div key={r.label} className="flex items-center justify-between py-2.5">
             <span className="text-sm text-prism-text">{r.label}</span>
-            <span className="font-display text-base font-bold text-prism-teal">{r.value}</span>
+            <span className="font-mono text-sm font-semibold tabular-nums text-prism-teal">{r.value}</span>
           </div>
         ))}
       </div>
