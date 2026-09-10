@@ -103,7 +103,7 @@ export function FormGroup({ group, form, onChange }: FormGroupProps) {
                   type="number"
                   value={form[f.key] as number}
                   onChange={(e) => onChange(f.key, e.target.value)}
-                  className={`w-full rounded-lg border bg-white px-3 py-2 text-sm text-prism-text outline-none transition-shadow focus:border-prism-teal focus:ring-2 focus:ring-prism-teal/20 ${BORDER_BY_STATUS[status]}`}
+                  className={`w-full rounded-lg border bg-white px-3 py-2 font-mono text-sm tabular-nums text-prism-text outline-none transition-shadow focus:border-prism-teal focus:ring-2 focus:ring-prism-teal/20 ${BORDER_BY_STATUS[status]}`}
                 />
               )}
               {f.note && (
